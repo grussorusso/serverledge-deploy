@@ -1,0 +1,11 @@
+---
+- name: Stop ServerlEdge
+  hosts: edge
+
+  tasks:
+    - name: Stop systemd service
+      ansible.builtin.systemd:
+        name: serverledge
+        state: stopped
+      become: yes
+

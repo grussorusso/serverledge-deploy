@@ -1,0 +1,85 @@
+---
+- name: Install Etcd
+  hosts: etcd
+  vars:
+    app_dir: /home/{{ ansible_user }}/etcd
+
+  tasks:
+    - name: Create remote directory
+      ansible.builtin.file:
+        path: "{{ app_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Download binaries
+      ansible.builtin.get_url:
+        url: "{{ etcd_release_url }}"
+        dest: /tmp/etcd-release.tar.gz
+      register: downloaded_binary
+
+    - name: Extract binaries
+      ansible.builtin.unarchive:
+        src: /tmp/etcd-release.tar.gz
+        remote_src: yes
+        dest: "{{ app_dir }}"
+      when: downloaded_binary.changed
+      register: extracted_binaries
+
+    - name: Install systemd service
+      ansible.builtin.template:
+        src: "templates/etcd.service.j2"
+        dest: "/etc/systemd/system/myetcd.service"
+        owner: root
+        group: root
+      become: yes
+      register: changed_service
+
+    - name: Start etcd service
+      ansible.builtin.systemd:
+        name: myetcd
+        state: restarted
+        daemon_reload: yes
+      become: yes
+      when: extracted_binaries.changed or changed_service.changed
+
+- name: Install ServerlEdge
+  hosts: edge
+  vars:
+    app_dir: /home/{{ ansible_user }}/serverledge
+
+  tasks:
+    - name: Install docker-ce
+      ansible.builtin.package:
+        name: docker-ce
+        state: present
+
+    - name: Create remote directory
+      ansible.builtin.file:
+        path: "{{ app_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Copy serverledge binary
+      ansible.builtin.copy:
+        src: "{{ serverledge_local_bin_dir }}/serverledge"
+        dest: "{{ app_dir }}/serverledge"
+        mode: '0755'
+      register: uploaded_binary
+
+    - name: Install systemd service
+      ansible.builtin.template:
+        src: "templates/serverledge.service.j2"
+        dest: "/etc/systemd/system/serverledge.service"
+        owner: root
+        group: root
+      become: yes
+      register: changed_service
+
+    - name: Start systemd service
+      ansible.builtin.systemd:
+        name: serverledge
+        state: restarted
+        daemon_reload: yes
+      become: yes
+      when: extracted_binaries.changed or changed_service.changed
+

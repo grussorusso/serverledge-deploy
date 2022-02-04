@@ -1,0 +1,11 @@
+[Unit]
+Description=Simple systemd service to run Serverledge.
+
+[Service]
+Type=simple
+WorkingDirectory={{ app_dir }}
+ExecStart={{ app_dir}}/serverledge
+ExecStop=/bin/kill -TERM $MAINPID
+
+[Install]
+WantedBy=multi-user.target
