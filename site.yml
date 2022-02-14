@@ -81,5 +81,5 @@
         state: restarted
         daemon_reload: yes
       become: yes
-      when: extracted_binaries.changed or changed_service.changed
+      when: uploaded_binary.changed or changed_service.changed
 
