@@ -1,3 +1,9 @@
+## Prerequisites 
+
+To install Docker:
+
+	ansible-galaxy install geerlingguy.docker
+
 ## Deploying Etcd and Serverledge from locally built binaries
 
 Provide the local path to Serverledge binaries in, e.g., `localvars.yml`:

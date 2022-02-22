@@ -1,6 +1,6 @@
 ---
 - name: Stop ServerlEdge
-  hosts: edge
+  hosts: edge:cloud
 
   tasks:
     - name: Stop systemd service

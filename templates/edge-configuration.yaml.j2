@@ -1,0 +1,7 @@
+---
+api.port: "{{ edge_api_port }}"
+etcd.address: "{{ groups['etcd'][0] }}:2379"
+
+# offloading parameters
+server_url: "http://{{ groups['cloud'][0] }}:{{ cloud_api_port }}/invoke/"
+offloading: true

@@ -1,3 +1,5 @@
 ---
 etcd_version: v3.4.17
 etcd_release_url: https://github.com/etcd-io/etcd/releases/download/{{ etcd_version }}/etcd-{{ etcd_version }}-linux-amd64.tar.gz
+cloud_api_port: 1324
+edge_api_port: 1323

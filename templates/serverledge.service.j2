@@ -4,7 +4,7 @@ Description=Simple systemd service to run Serverledge.
 [Service]
 Type=simple
 WorkingDirectory={{ app_dir }}
-ExecStart={{ app_dir}}/serverledge
+ExecStart={{ app_dir }}/serverledge {{ app_dir }}/conf.yml
 ExecStop=/bin/kill -TERM $MAINPID
 
 [Install]
