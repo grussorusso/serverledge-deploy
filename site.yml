@@ -40,14 +40,14 @@
         state: restarted
         daemon_reload: yes
       become: yes
-      when: extracted_binaries.changed or changed_service.changed
+      #when: extracted_binaries.changed or changed_service.changed
 
-- name: Install Docker
-  hosts: edge:cloud
-  become: yes
-  ignore_errors: true
-  roles:
-    - geerlingguy.docker
+      #- name: Install Docker
+      #  hosts: edge:cloud
+      #  become: yes
+      #  ignore_errors: true
+      #  roles:
+      #    - geerlingguy.docker
 
 - name: Install ServerlEdge
   hosts: edge
