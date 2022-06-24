@@ -1,4 +1,5 @@
 TODO
-Makefile
 *.ini
 local*vars.yml
+*.terraform*
+terraform.tfstate*
