@@ -1,8 +1,40 @@
 ---
+- name: Install Docker
+  hosts: 
+    - sedge_Edge
+    - sedge_Cloud
+
+  tasks:
+    - name: Check for Docker
+      ansible.builtin.shell: "docker ps > /dev/null"
+      register: check
+      ignore_errors: True
+
+    - name: Install Docker
+      ansible.builtin.command: amazon-linux-extras install -y docker
+      become: yes
+      when: check.failed
+
+    - name: Add user to Docker group
+      ansible.builtin.command: usermod -a -G docker {{ ansible_user }}
+      become: yes
+      when: check.failed
+      register: groupupdated
+
+    - name: Start docker
+      ansible.builtin.command: systemctl start docker
+      become: yes
+
+    - name: reset ssh connection
+      meta: reset_connection
+      when: groupupdated
+
 - name: Install Etcd
-  hosts: etcd
+  hosts: sedge_Cloud[0]
   vars:
     app_dir: /home/{{ ansible_user }}/etcd
+    etcd_version: v3.4.17
+    etcd_release_url: https://github.com/etcd-io/etcd/releases/download/{{ etcd_version }}/etcd-{{ etcd_version }}-linux-amd64.tar.gz
 
   tasks:
     - name: Create remote directory
@@ -40,17 +72,10 @@
         state: restarted
         daemon_reload: yes
       become: yes
-      #when: extracted_binaries.changed or changed_service.changed
 
-      #- name: Install Docker
-      #  hosts: edge:cloud
-      #  become: yes
-      #  ignore_errors: true
-      #  roles:
-      #    - geerlingguy.docker
 
-- name: Install ServerlEdge
-  hosts: edge
+- name: Install ServerlEdge at the Edge
+  hosts: sedge_Edge
   vars:
     app_dir: /home/{{ ansible_user }}/serverledge
     conf_template: templates/edge-configuration.yaml.j2
@@ -59,10 +84,50 @@
     - include_tasks: tasks/serverledge.yml
 
 - name: Install ServerlEdge in the Cloud
-  hosts: cloud
+  hosts: sedge_Cloud
   vars:
     app_dir: /home/{{ ansible_user }}/serverledge
     conf_template: templates/cloud-configuration.yaml.j2
 
   tasks:
     - include_tasks: tasks/serverledge.yml
+
+- name: Install LB in the Cloud
+  hosts: sedge_Cloud[1]
+  vars:
+    app_dir: /home/{{ ansible_user }}/serverledge
+    conf_template: templates/lb-configuration.yaml.j2
+
+  tasks:
+    - name: Copy serverledge binary
+      ansible.builtin.copy:
+        src: "{{ serverledge_local_bin_dir }}/lb"
+        dest: "{{ app_dir }}/lb"
+        mode: '0755'
+      register: uploaded_binary
+
+    - name: Install configuration file
+      ansible.builtin.template:
+        src: "{{ conf_template }}"
+        dest: "{{ app_dir }}/conflb.yml"
+        owner: root
+        group: root
+      become: yes
+      register: update_conf
+
+    - name: Install systemd service
+      ansible.builtin.template:
+        src: "templates/serverledgelb.service.j2"
+        dest: "/etc/systemd/system/serverledgelb.service"
+        owner: root
+        group: root
+      become: yes
+      register: changed_service
+
+    - name: Start systemd service
+      ansible.builtin.systemd:
+        name: serverledgelb
+        state: restarted
+        daemon_reload: yes
+      become: yes
+

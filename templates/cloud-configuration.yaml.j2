@@ -1,6 +1,14 @@
 
 ---
-api.port: "{{ cloud_api_port }}"
-etcd.address: "{{ groups['etcd'][0] }}:2379"
+api.port: 1324
+etcd.address: "{{ groups['sedge_Cloud'][0] }}:2379"
 
 cloud: true
+scheduler.policy: default
+container.pool.memory: 6072
+
+# Disable monitoring
+loggin.enabled: false
+logging.CleanInterval: 20
+registry.nearby.interval: 900
+registry.monitoring.interval: 900

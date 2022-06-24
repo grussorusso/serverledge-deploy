@@ -1,8 +1,8 @@
 ---
-api.port: "{{ edge_api_port }}"
-etcd.address: "{{ groups['etcd'][0] }}:2379"
+api.port: 1323
+etcd.address: "{{ groups['sedge_Cloud'][0] }}:2379"
+cloud.server.url: "http://{{ groups['sedge_Cloud'][1] }}:1323"
 
-# offloading parameters
-cloud.server.url: "http://{{ groups['cloud'][0] }}:{{ cloud_api_port }}"
 offloading: true
-scheduler.policy: cloudonly
+scheduler.policy: default
+container.pool.memory: 3072
