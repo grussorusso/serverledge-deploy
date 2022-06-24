@@ -3,3 +3,4 @@ TODO
 local*vars.yml
 *.terraform*
 terraform.tfstate*
+*output.txt
