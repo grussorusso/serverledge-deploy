@@ -1,9 +1,10 @@
-This repository contains scripts and utilities to easily deploy a Serverledge
+This repository contains scripts and utilities to easily deploy a
+[Serverledge](https://github.com/grussorusso/serverledge)
 cluster. We currently provide scripts to reproduce the following configuration:
 
 - AWS-based infrastructure 
-- 1+ Edge node in a given AWS region
-- 2+ Cloud nodes in a given AWS region
+- 1+ Edge node(s) in a given AWS region
+- 1+ Cloud node(s) in a given AWS region
 - 1 Load Balancer deployed in one of the Cloud nodes
 - 1 Etcd server deployed in one of the Cloud nodes
 

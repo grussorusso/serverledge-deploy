@@ -93,7 +93,7 @@
     - include_tasks: tasks/serverledge.yml
 
 - name: Install LB in the Cloud
-  hosts: sedge_Cloud[1]
+  hosts: sedge_Cloud[-1]
   vars:
     app_dir: /home/{{ ansible_user }}/serverledge
     conf_template: templates/lb-configuration.yaml.j2
