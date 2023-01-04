@@ -7,9 +7,12 @@ cluster. We currently provide scripts to reproduce the following configuration:
 - 1+ Cloud node(s) in a given AWS region
 - 1 Load Balancer deployed in one of the Cloud nodes
 - 1 Etcd server deployed in one of the Cloud nodes
+- *(Optional)* 1 Client node deployed alongside the Edge node(s)
 
 We use Terraform for infrastructure configuration on AWS and Ansible for automated
 deployment.
+
+You should properly customize the scripts we provide depending on your needs.
 
 ## Infrastructure Setup on AWS
 
@@ -18,7 +21,8 @@ credentials on the machine.
 
 Enter the `terraform/` directory and run `terraform init`.
 
-Edit the file `vars.tfvars` as needed. 
+Edit the file `vars.tfvars` as needed. Use this file to define how many 
+Edge/Cloud/Client nodes you desire.
 
 Configure the infrastructure:
 
@@ -42,6 +46,7 @@ You can check that everything works by running:
 
 	ansible-inventory -i inventory.aws_ec2.yaml --list
 
+
 ### Deploying Serverledge
 
 As Serverledge is currently under development, we deploy locally built binaries.
@@ -57,3 +62,13 @@ Run the playbook:
 Run a simple check:
 
 	make check
+
+### Benchmarking with JMeter
+
+Make sure to have provisioned 1 Client node in the infrastructure.
+
+Customize `jmeter/testplan.jmx`.
+
+Launch a benchmark:
+
+	make jmeter

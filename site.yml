@@ -131,3 +131,23 @@
         daemon_reload: yes
       become: yes
 
+- name: Configure Client
+  hosts: 
+    - sedge_Client
+
+  tasks:
+    - name: Copy serverledge CLI binary
+      ansible.builtin.copy:
+        src: "{{ serverledge_local_bin_dir }}/serverledge-cli"
+        dest: /home/{{ ansible_user }}/
+        mode: '0755'
+
+    - name: Install Java
+      ansible.builtin.command: amazon-linux-extras install -y java-openjdk11
+      become: yes
+
+    - name: Install JMeter
+      ansible.builtin.unarchive:
+        src: https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-5.5.tgz
+        dest: /home/{{ ansible_user}}/
+        remote_src: yes

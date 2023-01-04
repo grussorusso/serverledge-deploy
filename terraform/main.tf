@@ -10,6 +10,9 @@ variable "cloud_region" {
 variable "cloud_instance_count" {
 	type = number
 }
+variable "client_instance_count" {
+	type = number
+}
 
 # The default provider configuration; resources that begin with `aws_` will use
 # it as the default, and it can be referenced as `aws`.
@@ -33,6 +36,10 @@ variable "edge_instance_type" {
 }
 
 variable "cloud_instance_type" {
+	type = string
+}
+
+variable "client_instance_type" {
 	type = string
 }
 
@@ -166,4 +173,14 @@ resource "aws_instance" "cloud" {
   }
 }
 
+resource "aws_instance" "client" {
+  count         = var.client_instance_count
+  ami           = data.aws_ami.amazonlinux_edge.id
+  instance_type = var.client_instance_type
+  key_name = var.aws_key_name
+  security_groups = [aws_security_group.edge-sg.name]
 
+  tags = {
+    Name = "Client"
+  }
+}

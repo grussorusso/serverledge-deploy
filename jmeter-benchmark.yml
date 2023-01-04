@@ -1,0 +1,42 @@
+---
+- name: Quick benchmark
+  hosts: 
+    - sedge_Client
+
+  tasks:
+    - ansible.builtin.copy:
+        src: examples/sieve.js
+        dest: /home/{{ ansible_user }}/sieve.js
+
+    - ansible.builtin.shell: "./serverledge-cli delete -f sieve"
+      ignore_errors: True
+      environment:
+        SERVERLEDGE_HOST: '{{ groups["sedge_Edge"][0] }}'
+
+    - ansible.builtin.shell: "./serverledge-cli create -f sieve --memory 128 --src sieve.js --runtime nodejs17ng --handler sieve.js"
+      environment:
+        SERVERLEDGE_HOST: '{{ groups["sedge_Edge"][0] }}'
+
+    - name: Copy testplan
+      ansible.builtin.copy:
+        src: jmeter/testplan.jmx
+        dest: /home/{{ ansible_user }}/testplan.jmx
+
+    - name: Clean previous results
+      ansible.builtin.shell: "rm /tmp/jmeter*"
+      ignore_errors: True
+
+    - name: Start 
+      ansible.builtin.shell: /home/{{ ansible_user }}/apache-jmeter-5.5/bin/jmeter -n -t /home/{{ ansible_user }}/testplan.jmx -l /tmp/jmeter_results -Jhost={{ groups['sedge_Edge'][0] }}
+      async: 600
+      poll: 20
+      register: jmeter_out
+
+    - name: Copy results
+      ansible.builtin.fetch: 
+        src: /tmp/jmeter_results
+        dest: jmeter_results.csv
+        flat: yes
+
+    - debug:
+        var: jmeter_out.stdout_lines
