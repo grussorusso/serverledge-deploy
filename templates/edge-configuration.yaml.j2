@@ -4,5 +4,5 @@ etcd.address: "{{ groups['sedge_Cloud'][0] }}:2379"
 cloud.server.url: "http://{{ groups['sedge_Cloud'][-1] }}:1323"
 
 offloading: true
-scheduler.policy: default
+scheduler.policy: localonly
 container.pool.memory: 3072

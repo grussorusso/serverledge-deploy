@@ -1,0 +1,20 @@
+---
+- name: Restart ServerlEdge
+  hosts: sedge_Edge:sedge_Cloud
+
+  tasks:
+    - ansible.builtin.systemd:
+        name: serverledge
+        state: stopped
+      become: yes
+
+    - name: Kill existing serverledge containers
+      ansible.builtin.shell: "docker ps | grep serverledge | cut -d ' ' -f 1 | grep -v CONT | xargs docker kill"
+      become: yes
+      ignore_errors: True
+
+    - ansible.builtin.systemd:
+        name: serverledge
+        state: started
+      become: yes
+
