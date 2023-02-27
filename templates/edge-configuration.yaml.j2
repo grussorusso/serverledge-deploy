@@ -6,3 +6,5 @@ cloud.server.url: "http://{{ groups['sedge_Cloud'][-1] }}:1323"
 offloading: true
 scheduler.policy: localonly
 container.pool.memory: 3072
+container.pool.cpus: 6
+scheduler.queue.capacity: 1024

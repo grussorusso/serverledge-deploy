@@ -1,8 +1,9 @@
-RESULTS_DIR="results_cpu05"
+RESULTS_DIR="results_sleep6_8"
 
 [[ -d $RESULTS_DIR ]] || mkdir -p $RESULTS_DIR 
 
-for users in $(seq 73 2 85); do
+#for users in $(seq 17 2 71); do
+for users in 1 5 10 20 30 40 50; do
 	make restart-serverledge
 	sleep 5
 	ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -v -i inventory.aws_ec2.yaml \

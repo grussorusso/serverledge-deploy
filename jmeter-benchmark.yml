@@ -7,6 +7,9 @@
 
   tasks:
     - ansible.builtin.copy:
+        src: examples/sleep.py
+        dest: /home/{{ ansible_user }}/sleep.py
+    - ansible.builtin.copy:
         src: examples/sieve.js
         dest: /home/{{ ansible_user }}/sieve.js
 
@@ -15,7 +18,10 @@
       environment:
         SERVERLEDGE_HOST: '{{ groups["sedge_Edge"][0] }}'
 
-    - ansible.builtin.shell: "./serverledge-cli create -f myFunction --memory 128 --cpu 0.5 --src sieve.js --runtime nodejs17ng --handler sieve.js"
+          #- ansible.builtin.shell: "./serverledge-cli create -f myFunction --memory 128 --cpu 1.0 --src sieve.js --runtime nodejs17ng --handler sieve.js"
+          #  environment:
+          #    SERVERLEDGE_HOST: '{{ groups["sedge_Edge"][0] }}'
+    - ansible.builtin.shell: "./serverledge-cli create -f myFunction --memory 128 --cpu 1.0 --src sleep.py --runtime python310 --handler sleep.handler"
       environment:
         SERVERLEDGE_HOST: '{{ groups["sedge_Edge"][0] }}'
 
