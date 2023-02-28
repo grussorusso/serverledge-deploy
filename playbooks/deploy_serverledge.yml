@@ -1,0 +1,51 @@
+---
+- name: Install Docker
+  hosts: 
+    - sedge_Edge
+    - sedge_Cloud
+
+  roles:
+    - geerlingguy.docker
+
+  post_tasks:
+    - name: Add user to docker group
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        state: present
+        append: yes
+        groups: docker
+
+    - name: reset ssh connection
+      meta: reset_connection
+      when: groupupdated
+
+- name: Install Etcd
+  hosts: sedge_Cloud[0]
+  roles:
+    - etcd
+
+
+
+- name: Install ServerlEdge at the Edge
+  hosts: sedge_Edge
+  vars:
+    conf_template: templates/edge-configuration.yaml.j2
+
+  roles:
+    - serverledge
+
+- name: Install ServerlEdge in the Cloud
+  hosts: sedge_Cloud
+  vars:
+    conf_template: templates/cloud-configuration.yaml.j2
+  roles:
+    - serverledge
+
+
+- name: Install LB in the Cloud
+  hosts: sedge_Cloud[-1]
+  vars:
+    conf_template: templates/lb-configuration.yaml.j2
+  roles:
+    role: serverledge_lb
+    when: "{{ groups['sedge_Cloud'] | length }}" > 1

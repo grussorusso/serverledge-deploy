@@ -1,7 +1,0 @@
----
-- name: Test the setup
-  hosts: 
-    - localhost
-
-  tasks:
-    - ansible.builtin.shell: "{{ serverledge_local_bin_dir }}/serverledge-cli -H {{ groups['sedge_Edge'][0] }} status"
