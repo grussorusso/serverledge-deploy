@@ -29,7 +29,7 @@
 - name: Install ServerlEdge at the Edge
   hosts: sedge_Edge
   vars:
-    conf_template: templates/edge-configuration.yaml.j2
+    conf_template: edge-configuration.yaml.j2
 
   roles:
     - serverledge
@@ -37,7 +37,7 @@
 - name: Install ServerlEdge in the Cloud
   hosts: sedge_Cloud
   vars:
-    conf_template: templates/cloud-configuration.yaml.j2
+    conf_template: cloud-configuration.yaml.j2
   roles:
     - serverledge
 
@@ -45,7 +45,7 @@
       #- name: Install LB in the Cloud
       #  hosts: sedge_Cloud[-1]
       #  vars:
-      #    conf_template: templates/lb-configuration.yaml.j2
+      #    conf_template: lb-configuration.yaml.j2
       #  roles:
       #    role: serverledge_lb
       #    when: "{{ groups['sedge_Cloud'] | length | int }} > 1"

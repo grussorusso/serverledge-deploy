@@ -1,4 +1,4 @@
 ---
 cloud_api_port: 1324
 edge_api_port: 1323
-
+serverledge_local_bin_dir: ./serverledge-bin

@@ -17,7 +17,7 @@ You should properly customize the scripts we provide depending on your needs.
 
 ## Requirements
 
-	ansible-galaxy collection install geerlingguy.docker
+	ansible-galaxy install geerlingguy.docker
 	ansible-galaxy collection install community.docker
 
 ## Infrastructure Setup on AWS
