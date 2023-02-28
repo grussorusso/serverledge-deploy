@@ -42,10 +42,10 @@
     - serverledge
 
 
-- name: Install LB in the Cloud
-  hosts: sedge_Cloud[-1]
-  vars:
-    conf_template: templates/lb-configuration.yaml.j2
-  roles:
-    role: serverledge_lb
-    when: "{{ groups['sedge_Cloud'] | length }}" > 1
+      #- name: Install LB in the Cloud
+      #  hosts: sedge_Cloud[-1]
+      #  vars:
+      #    conf_template: templates/lb-configuration.yaml.j2
+      #  roles:
+      #    role: serverledge_lb
+      #    when: "{{ groups['sedge_Cloud'] | length | int }} > 1"
