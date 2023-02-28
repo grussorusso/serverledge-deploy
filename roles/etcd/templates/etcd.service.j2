@@ -11,7 +11,7 @@ RestartSec=5s
 LimitNOFILE=40000
 TimeoutStartSec=0
 
-ExecStart={{ app_dir}}/etcd-{{ etcd_version }}-linux-amd64/etcd --name s1 \
+ExecStart={{ etcd_dir }}/etcd-{{ etcd_version }}-linux-amd64/etcd --name s1 \
   --data-dir /tmp/etcd/s1 \
   --listen-client-urls http://0.0.0.0:2379 \
   --advertise-client-urls http://0.0.0.0:2379 \

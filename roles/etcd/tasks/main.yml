@@ -1,0 +1,30 @@
+---
+- name: Create remote directory
+  ansible.builtin.file:
+    path: "{{ etcd_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Extract binaries
+  ansible.builtin.unarchive:
+    src: "{{ etcd_release_url }}"
+    remote_src: yes
+    dest: "{{ etcd_dir }}"
+  register: extract
+
+- name: Install systemd service
+  ansible.builtin.template:
+    src: etcd.service.j2
+    dest: "/etc/systemd/system/myetcd.service"
+    owner: root
+    group: root
+  become: yes
+  register: systemdservice
+
+- name: Start etcd service
+  ansible.builtin.systemd:
+    name: myetcd
+    state: restarted
+    daemon_reload: yes
+  become: yes
+  when: systemdservice.changed or extract.changed

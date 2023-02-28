@@ -1,0 +1,33 @@
+---
+- name: Copy serverledge binary
+  ansible.builtin.copy:
+    src: "{{ serverledge_local_bin_dir }}/lb"
+    dest: "{{ app_dir }}/lb"
+    mode: '0755'
+  register: uploaded_binary
+
+- name: Install configuration file
+  ansible.builtin.template:
+    src: "{{ conf_template }}"
+    dest: "{{ app_dir }}/conflb.yml"
+    owner: root
+    group: root
+  become: yes
+  register: update_conf
+
+- name: Install systemd service
+  ansible.builtin.template:
+    src: serverledgelb.service.j2
+    dest: /etc/systemd/system/serverledgelb.service
+    owner: root
+    group: root
+  become: yes
+  register: changed_service
+
+- name: Start systemd service
+  ansible.builtin.systemd:
+    name: serverledgelb
+    state: restarted
+    daemon_reload: yes
+  become: yes
+  when: changed_service.changed or update_conf.changed or uploaded_binary.changed

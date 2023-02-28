@@ -1,0 +1,3 @@
+---
+app_dir: "{{ ansible_env.HOME }}/serverledge"
+conf_template: configuration.yml.j2

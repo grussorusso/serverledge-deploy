@@ -1,3 +1,4 @@
+
 This repository contains scripts and utilities to easily deploy a
 [Serverledge](https://github.com/grussorusso/serverledge)
 cluster. We currently provide scripts to reproduce the following configuration:
@@ -13,6 +14,11 @@ We use Terraform for infrastructure configuration on AWS and Ansible for automat
 deployment.
 
 You should properly customize the scripts we provide depending on your needs.
+
+## Requirements
+
+	ansible-galaxy collection install geerlingguy.docker
+	ansible-galaxy collection install community.docker
 
 ## Infrastructure Setup on AWS
 
