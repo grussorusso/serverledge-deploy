@@ -14,9 +14,9 @@
     func_name: myFunc
     func_mem: 128
     func_cpu: 1.0
-    func_runtime: python310
-    func_handler: sleep.handler
-    func_src: sleep.py
+    func_runtime: nodejs17ng
+    func_handler: sieve.js
+    func_src: sieve.js
     testplan: jmeter/testplanClosed.jmx
     users: 3
     local_results_file: results.csv
