@@ -42,14 +42,12 @@
         daemon_reload: yes
       become: yes
       when: serverledge_service.changed or uploaded_binary.changed
+
     - name: Pull NodeJS image
-      community.docker.docker_image:
-        name: grussorusso/serverledge-nodejs17ng
-        source: pull
+      ansible.builtin.command: docker pull grussorusso/serverledge-nodejs17ng
       when: pull_nodejs
+
     - name: Pull Python image
-      community.docker.docker_image:
-        name: grussorusso/serverledge-python310
-        source: pull
+      ansible.builtin.command: docker pull grussorusso/serverledge-python310
       when: pull_python
-  when: not deploy_only_cli
+  when: not deploy_cli_only

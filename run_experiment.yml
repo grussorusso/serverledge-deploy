@@ -33,7 +33,7 @@
       include_role:
         role: serverledge
       vars:
-        deploy_only_cli: true
+        deploy_cli_only: true
 
     - ansible.builtin.copy:
         src: files/sleep.py

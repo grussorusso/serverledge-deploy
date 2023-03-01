@@ -4,16 +4,37 @@
     - sedge_Edge
     - sedge_Cloud
 
-  roles:
-    - geerlingguy.docker
+  tasks:
+    - name: "Install Docker using role"
+      include_role:
+        role: geerlingguy.docker
+      when: ansible_facts['distribution'] != "Amazon"
 
-  post_tasks:
+    - name: "Install Docker on Amazon Linux"
+      block:
+        - name: Check for Docker
+          ansible.builtin.shell: "docker ps > /dev/null"
+          register: check
+          ignore_errors: True
+
+        - name: Install Docker
+          ansible.builtin.command: amazon-linux-extras install -y docker
+          become: yes
+          when: check.failed
+
+        - name: Start docker
+          ansible.builtin.command: systemctl start docker
+          become: yes
+      when: ansible_facts['distribution'] == "Amazon"
+
+
     - name: Add user to docker group
       ansible.builtin.user:
         name: "{{ ansible_user }}"
         state: present
         append: yes
         groups: docker
+      become: yes
 
     - name: reset ssh connection
       meta: reset_connection
