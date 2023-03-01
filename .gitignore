@@ -5,3 +5,6 @@ local*vars.yml
 terraform.tfstate*
 *output.txt
 roles/geerlingguy.docker
+results/
+results*csv
+responses*tar.gz

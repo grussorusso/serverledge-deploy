@@ -1,0 +1,93 @@
+---
+- name: Restart Serverledge
+  hosts: 
+    - sedge_Edge
+    - sedge_Cloud
+  tasks:
+    - include_tasks:
+        file: tasks/restart_serverledge.yml
+
+- name: Quick benchmark
+  hosts: 
+    - sedge_Client
+  vars:
+    func_name: myFunc
+    func_mem: 128
+    func_cpu: 1.0
+    func_runtime: python310
+    func_handler: sleep.handler
+    func_src: sleep.py
+    testplan: jmeter/testplanClosed.jmx
+    users: 3
+    local_results_file: results.csv
+    local_responses_file: responses.tar.gz
+
+  tasks:
+    - name: Install JMeter
+      include_role:
+        role: jmeter
+      vars:
+        jmeter_home: "{{ ansible_env.HOME }}"
+
+    - name: Install serverledge-cli
+      include_role:
+        role: serverledge
+      vars:
+        deploy_only_cli: true
+
+    - ansible.builtin.copy:
+        src: files/sleep.py
+        dest: "{{ ansible_env.HOME }}/sleep.py"
+
+    - ansible.builtin.copy:
+        src: files/sieve.js
+        dest: "{{ ansible_env.HOME }}/sieve.js"
+
+    - ansible.builtin.shell: "./serverledge-cli delete -f {{ func_name }}"
+      ignore_errors: True
+      environment:
+        SERVERLEDGE_HOST: '{{ groups["sedge_Edge"][0] }}'
+
+          #- ansible.builtin.shell: "./serverledge-cli create -f myFunction --memory 128 --cpu 1.0 --src sieve.js --runtime nodejs17ng --handler sieve.js"
+          #  environment:
+          #    SERVERLEDGE_HOST: '{{ groups["sedge_Edge"][0] }}'
+    - ansible.builtin.shell: "./serverledge-cli create -f {{ func_name }} --memory {{ func_mem }} --cpu {{ func_cpu }} --src {{ func_src }} --runtime {{ func_runtime }} --handler {{ func_handler }}"
+      environment:
+        SERVERLEDGE_HOST: '{{ groups["sedge_Edge"][0] }}'
+
+    - name: Copy testplan
+      ansible.builtin.copy:
+        src: "{{ testplan }}"
+        dest: ./testplan.jmx
+
+    - name: Clean previous results
+      ansible.builtin.shell: "rm /tmp/jmeter*"
+      ignore_errors: True
+
+    - name: Start 
+      ansible.builtin.shell: "{{ ansible_env.HOME }}/apache-jmeter-5.5/bin/jmeter -n -t ./testplan.jmx -l /tmp/jmeter_results -Jhost={{ groups['sedge_Edge'][0] }} -Jusers={{ users }}"
+      async: 900
+      poll: 20
+      register: jmeter_out
+
+    - name: Zip Response files
+      community.general.archive:
+        path:
+          - jmeterResponse_*
+        dest: /tmp/jmeter_responses.tar.gz
+        format: gz
+
+    - name: Copy results
+      ansible.builtin.fetch: 
+        src: /tmp/jmeter_results
+        dest: "{{ local_results_file }}"
+        flat: yes
+
+    - name: Copy responses
+      ansible.builtin.fetch: 
+        src: /tmp/jmeter_responses.tar.gz
+        dest: "{{ local_responses_file }}"
+        flat: yes
+
+    - debug:
+        var: jmeter_out.stdout_lines
