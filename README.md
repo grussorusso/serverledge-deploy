@@ -50,6 +50,11 @@ When you are done, clean up:
 ### Inventory
 
 Create an Ansible inventory file (default path is `inventory/default.ini`).
+Group the hosts using the following groups:
+
+- `sedge_Edge`: Edge nodes
+- `sedge_Cloud`: Cloud nodes
+- `sedge_Client`: node(s) acting as client/workload generator
 
 If you provisioned the infrastructure in EC2, you can also use
 `inventory.aws_ec2.yaml` that allows Ansible to
