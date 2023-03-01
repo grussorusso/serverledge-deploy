@@ -5,53 +5,51 @@
     state: directory
     mode: '0755'
 
-- name: Copy serverledge binary
-  ansible.builtin.copy:
-    src: "{{ serverledge_local_bin_dir }}/serverledge"
-    dest: "{{ app_dir }}/serverledge"
-    mode: '0755'
-  register: uploaded_binary
-
 - name: Copy serverledge-cli binary
   ansible.builtin.copy:
     src: "{{ serverledge_local_bin_dir }}/serverledge-cli"
     dest: "{{ app_dir }}/serverledge-cli"
     mode: '0755'
 
-- name: Install configuration file
-  ansible.builtin.template:
-    src: "{{ conf_template }}"
-    dest: "{{ app_dir }}/conf.yml"
-    owner: root
-    group: root
-  become: yes
-  register: conf
-
-- name: Install systemd service
-  ansible.builtin.template:
-    src: serverledge.service.j2
-    dest: /etc/systemd/system/serverledge.service
-    owner: root
-    group: root
-  become: yes
-  register: serverledge_service
-
-- name: Start systemd service
-  ansible.builtin.systemd:
-    name: serverledge
-    state: restarted
-    daemon_reload: yes
-  become: yes
-  when: serverledge_service.changed or uploaded_binary.changed
-
-- name: Pull NodeJS image
-  community.docker.docker_image:
-    name: grussorusso/serverledge-nodejs17ng
-    source: pull
-  when: pull_nodejs
-
-- name: Pull Python image
-  community.docker.docker_image:
-    name: grussorusso/serverledge-python310
-    source: pull
-  when: pull_python
+- name: "Install core Serverledge service"
+  block:
+    - name: Copy serverledge binary
+      ansible.builtin.copy:
+        src: "{{ serverledge_local_bin_dir }}/serverledge"
+        dest: "{{ app_dir }}/serverledge"
+        mode: '0755'
+      register: uploaded_binary
+    - name: Install configuration file
+      ansible.builtin.template:
+        src: "{{ conf_template }}"
+        dest: "{{ app_dir }}/conf.yml"
+        owner: root
+        group: root
+      become: yes
+      register: conf
+    - name: Install systemd service
+      ansible.builtin.template:
+        src: serverledge.service.j2
+        dest: /etc/systemd/system/serverledge.service
+        owner: root
+        group: root
+      become: yes
+      register: serverledge_service
+    - name: Start systemd service
+      ansible.builtin.systemd:
+        name: serverledge
+        state: restarted
+        daemon_reload: yes
+      become: yes
+      when: serverledge_service.changed or uploaded_binary.changed
+    - name: Pull NodeJS image
+      community.docker.docker_image:
+        name: grussorusso/serverledge-nodejs17ng
+        source: pull
+      when: pull_nodejs
+    - name: Pull Python image
+      community.docker.docker_image:
+        name: grussorusso/serverledge-python310
+        source: pull
+      when: pull_python
+  when: not deploy_only_cli

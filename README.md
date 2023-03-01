@@ -17,6 +17,8 @@ You should properly customize the scripts we provide depending on your needs.
 
 ## Requirements
 
+Install the following Ansible components to configure and use Docker:
+
 	ansible-galaxy install geerlingguy.docker
 	ansible-galaxy collection install community.docker
 

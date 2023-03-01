@@ -1,0 +1,18 @@
+---
+- name: Install Java
+  ansible.builtin.apt:
+    name: default-jre
+    state: present
+  become: yes
+  when: (ansible_facts['distribution'] == "Debian") or (ansible_facts['distribution'] == "Ubuntu")
+
+- name: Install Java
+  ansible.builtin.command: amazon-linux-extras install -y java-openjdk11
+  become: yes
+  when: ansible_facts['distribution'] == "Amazon"
+
+- name: Install JMeter
+  ansible.builtin.unarchive:
+    src: https://dlcdn.apache.org/jmeter/binaries/apache-jmeter-5.5.tgz
+    dest: "{{ jmeter_home }}"
+    remote_src: yes

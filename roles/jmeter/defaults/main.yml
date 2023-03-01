@@ -1,0 +1,2 @@
+---
+jmeter_home: "{{ ansible_env.HOME }}"
