@@ -43,7 +43,8 @@
 - name: Install Etcd
   hosts: sedge_Cloud[0]
   roles:
-    - etcd
+    - role: etcd
+      wipe_etcd: true
 
 
 

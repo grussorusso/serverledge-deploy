@@ -11,7 +11,7 @@
   hosts: 
     - sedge_Client
   vars:
-    func_name: myFunc
+    func_name: myFunction # must match with the testplan
     func_mem: 128
     func_cpu: 1.0
     func_runtime: nodejs17ng

@@ -2,3 +2,4 @@
 etcd_dir: "{{ ansible_env.HOME }}/etcd"
 etcd_version: v3.4.17
 etcd_release_url: https://github.com/etcd-io/etcd/releases/download/{{ etcd_version }}/etcd-{{ etcd_version }}-linux-amd64.tar.gz
+wipe_etcd: false

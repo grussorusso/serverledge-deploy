@@ -12,6 +12,14 @@
     dest: "{{ etcd_dir }}"
   register: extract
 
+- name: Copy etcdctl binary
+  ansible.builtin.copy:
+    src: "etcd/etcd-{{ etcd_version }}-linux-amd64/etcdctl"
+    remote_src: yes
+    dest: "/usr/local/bin/"
+    mode: '0755'
+  become: yes
+
 - name: Install systemd service
   ansible.builtin.template:
     src: etcd.service.j2
@@ -27,4 +35,7 @@
     state: restarted
     daemon_reload: yes
   become: yes
-  when: systemdservice.changed or extract.changed
+
+- name: Wipe data
+  ansible.builtin.shell: ETCDCTL_API=3 etcdctl del "" --from-key=true
+  when: wipe_etcd
