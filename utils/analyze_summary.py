@@ -1,13 +1,16 @@
+import numpy as np
+import tarfile
+import json
 import pandas as pd
 import sys
 import os
 import re
 
-print("Users,ArrivalRate,Throughput,AvgRT")
+ANALYZE_RESPONSES=True
+results = []
 
 DIR=sys.argv[1] if len(sys.argv) > 1 else "."
 
-results = []
 
 for entry in os.listdir(DIR):
     m = re.match("results-(\d+).csv", entry)
@@ -27,6 +30,32 @@ for entry in os.listdir(DIR):
         "throughput": tput,
         "avgRespTime": avg_rt,
         "duration": experiment_time})
+df = pd.DataFrame(results)
 
-    df = pd.DataFrame(results).sort_values("users")
-print(df)
+results_responses = []
+if ANALYZE_RESPONSES:
+    for entry in os.listdir(DIR):
+        m = re.match("responses-(\d+).tar.gz", entry)
+        if m is None:
+            continue
+        users = int(m.groups()[0])
+        tar = tarfile.open(os.path.join(DIR,entry), "r:gz")
+        resp_times = []
+        serv_times = []
+
+        for member in tar.getmembers():
+            f = tar.extractfile(member)
+            if f is not None:
+                content = f.read().decode("utf-8").strip()
+                if len(content) == 0:
+                    continue
+                d = json.loads(content)
+                resp_times.append(float(d["ResponseTime"]))
+                serv_times.append(float(d["Duration"]))
+        results_responses.append({"users": users,
+            "avgInternalRespTime": np.mean(resp_times),
+            "avgServiceTime": np.mean(serv_times)})
+    df = pd.merge(df,pd.DataFrame(results_responses))
+
+
+print(df.sort_values("users"))
