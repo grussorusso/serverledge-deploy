@@ -64,6 +64,10 @@
       ansible.builtin.shell: "rm /tmp/jmeter*"
       ignore_errors: True
 
+    - name: Clean previous responses
+      ansible.builtin.shell: "find . -name 'jmeterResponse_*' -delete"
+      ignore_errors: True
+
     - name: Start 
       ansible.builtin.shell: "{{ ansible_env.HOME }}/apache-jmeter-5.5/bin/jmeter -n -t ./testplan.jmx -l /tmp/jmeter_results -Jhost={{ groups['sedge_Edge'][0] }} -Jusers={{ users }}"
       async: 900
@@ -76,6 +80,7 @@
           - jmeterResponse_*
         dest: /tmp/jmeter_responses.tar.gz
         format: gz
+        remove: yes
 
     - name: Copy results
       ansible.builtin.fetch: 

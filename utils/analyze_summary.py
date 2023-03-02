@@ -30,6 +30,8 @@ for entry in os.listdir(DIR):
         "throughput": tput,
         "avgRespTime": avg_rt,
         "duration": experiment_time})
+if len(results) == 0:
+    exit(0)
 df = pd.DataFrame(results)
 
 results_responses = []
@@ -55,7 +57,9 @@ if ANALYZE_RESPONSES:
         results_responses.append({"users": users,
             "avgInternalRespTime": np.mean(resp_times),
             "avgServiceTime": np.mean(serv_times)})
-    df = pd.merge(df,pd.DataFrame(results_responses))
+
+    df2 = pd.DataFrame(results_responses)
+    df = pd.merge(df,df2,on="users")
 
 
 print(df.sort_values("users"))
