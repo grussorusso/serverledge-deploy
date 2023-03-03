@@ -1,0 +1,11 @@
+[Unit]
+Description=Simple systemd service to monitor CPU.
+
+[Service]
+Type=simple
+WorkingDirectory={{ ansible_env.HOME }}
+ExecStart={{ ansible_env.HOME }}/monitorCPU.sh {{ ansible_env.HOME }}/cpuUsage.txt
+ExecStop=/bin/kill -TERM $MAINPID
+
+[Install]
+WantedBy=multi-user.target

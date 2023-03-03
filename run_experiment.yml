@@ -7,6 +7,33 @@
     - include_tasks:
         file: tasks/restart_serverledge.yml
 
+    - name: Install CPU monitoring script
+      ansible.builtin.copy:
+        src: monitorCPU.sh
+        dest: "{{ ansible_env.HOME }}"
+        mode: '0755'
+
+    - name: Install CPU monitoring service
+      ansible.builtin.template:
+        src: monitorCPU.service.j2
+        dest: /etc/systemd/system/monitorCPU.service
+        owner: root
+        group: root
+      become: yes
+      register: monitor_service
+
+    - name: Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: yes
+      become: yes
+      when: monitor_service.changed
+
+    - name: Start systemd service
+      ansible.builtin.systemd:
+        name: monitorCPU
+        state: restarted
+      become: yes
+
 - name: Quick benchmark
   hosts: 
     - sedge_Client
@@ -68,6 +95,10 @@
       ansible.builtin.shell: "find . -name 'jmeterResponse_*' -delete"
       ignore_errors: True
 
+    - name: Stop any running Jmeter instance
+      ansible.builtin.shell: "pgrep jmeter | xargs kill -TERM"
+      ignore_errors: True
+
     - name: Start 
       ansible.builtin.shell: "{{ ansible_env.HOME }}/apache-jmeter-5.5/bin/jmeter -n -t ./testplan.jmx -l /tmp/jmeter_results -Jhost={{ groups['sedge_Edge'][0] }} -Jusers={{ users }}"
       async: 900
@@ -96,3 +127,22 @@
 
     - debug:
         var: jmeter_out.stdout_lines
+
+- name: Get monitoring data
+  hosts: 
+    - sedge_Edge
+    - sedge_Cloud
+  vars:
+    local_output_dir: "."
+  tasks:
+    - name: Stop systemd service
+      ansible.builtin.systemd:
+        name: monitorCPU
+        state: stopped
+      become: yes
+
+    - name: Copy monitoring data
+      ansible.builtin.fetch: 
+        src: "{{ ansible_env.HOME }}/cpuUsage.txt"
+        dest: "{{ local_output_dir }}/cpuUsage-{{ ansible_hostname }}.txt"
+        flat: yes

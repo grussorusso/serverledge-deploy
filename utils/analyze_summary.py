@@ -62,4 +62,6 @@ if ANALYZE_RESPONSES:
     df = pd.merge(df,df2,on="users")
 
 
-print(df.sort_values("users"))
+df = df.sort_values("users")
+print(df)
+df.to_csv(os.path.join(DIR,"summary.csv"), index=False)
