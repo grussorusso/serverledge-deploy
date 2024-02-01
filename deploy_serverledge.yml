@@ -56,16 +56,26 @@
   roles:
     - serverledge
 
-- name: Install ServerlEdge in the Cloud
+- name: Install ServerlEdge in all Cloud nodes
   hosts: sedge_Cloud
   vars:
     conf_template: cloud-configuration.yaml.j2
-  roles:
-    - serverledge
+  tasks:
+    - include_role: 
+        name: serverledge
+      when: "{{ groups['sedge_Cloud'] | length | int }} < 2"
 
+- name: Install ServerlEdge in all Cloud nodes but one
+  hosts: sedge_Cloud[1:]
+  vars:
+    conf_template: cloud-configuration.yaml.j2
+  tasks:
+    - include_role: 
+        name: serverledge
+      when: "{{ groups['sedge_Cloud'] | length | int }} > 1"
 
 - name: Install LB in the Cloud
-  hosts: sedge_Cloud[-1]
+  hosts: sedge_Cloud[0]
   vars: 
     conf_template: lb-configuration.yaml.j2
 

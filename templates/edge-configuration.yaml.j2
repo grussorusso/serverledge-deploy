@@ -1,10 +1,10 @@
 ---
 api.port: 1323
 etcd.address: "{{ groups['sedge_Cloud'][0] }}:2379"
-cloud.server.url: "http://{{ groups['sedge_Cloud'][-1] }}:1323"
+cloud.server.url: "http://{{ groups['sedge_Cloud'][0] }}:1323"
 
 offloading: true
-scheduler.policy: localonly
+scheduler.policy: edgecloud
 container.pool.memory: 3072
-container.pool.cpus: 3
-scheduler.queue.capacity: 1024
+container.pool.cpus: 1
+scheduler.queue.capacity: 0
