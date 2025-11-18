@@ -1,13 +1,14 @@
 ---
-api.port: 1324
-etcd.address: "{{ groups['sedge_Cloud'][0] }}:2379"
+api.port: {{ cloud_api_port }}
+etcd.address: "{{ hostvars[groups['cloud'][0]]['ansible_facts']['default_ipv4']['address'] }}:2379"
+registry.udp.port: 9888
+container.pool.memory: 4000
 
-cloud: true
-scheduler.policy: default
-container.pool.memory: 6072
 
-# Disable monitoring
-loggin.enabled: false
-logging.CleanInterval: 20
-registry.nearby.interval: 900
-registry.monitoring.interval: 900
+scheduler.queue.capacity: 0
+
+scheduler.policy: localonly
+registry.area: "cloud-ROME"
+metrics.enabled: true
+tracing.enabled: false
+

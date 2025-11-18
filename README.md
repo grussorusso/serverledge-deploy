@@ -18,32 +18,6 @@ Install the following Ansible role, which is used to configure Docker:
 
 	ansible-galaxy install geerlingguy.docker
 
-## Infrastructure Setup on AWS
-
-We currently provide scripts to reproduce the following configuration:
-
-- AWS-based infrastructure 
-- 1+ Edge node(s) in a given AWS region
-- 1+ Cloud node(s) in a given AWS region
-- 1 Load Balancer deployed in one of the Cloud nodes
-- 1 Etcd server deployed in one of the Cloud nodes
-- *(Optional)* 1 Client node deployed alongside the Edge node(s)
-
-We assume that the AWS CLI/SDK has already been configured with the required
-credentials on the machine.
-
-Enter the `terraform/` directory and run `terraform init`.
-
-Edit the file `vars.tfvars` as needed. Use this file to define how many 
-Edge/Cloud/Client nodes you desire.
-
-Configure the infrastructure:
-
-	make tf
-
-When you are done, clean up:
-
-	make destroy
 
 ## Ansible
 
@@ -52,8 +26,8 @@ When you are done, clean up:
 Create an Ansible inventory file (default path is `inventory/default.ini`).
 Group the hosts using the following groups:
 
-- `sedge_Edge`: Edge nodes
-- `sedge_Cloud`: Cloud nodes
+- `edge`: Edge nodes
+- `cloud`: Cloud nodes
 - `sedge_Client`: node(s) acting as client/workload generator
 
 If you provisioned the infrastructure in EC2, you can also use

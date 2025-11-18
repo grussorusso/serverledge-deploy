@@ -1,0 +1,1 @@
+prometheus_dir: "{{ ansible_env.HOME }}/prometheus"

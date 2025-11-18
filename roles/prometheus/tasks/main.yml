@@ -1,0 +1,27 @@
+---
+- name: Create remote directory
+  ansible.builtin.file:
+    path: "{{ prometheus_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Install configuration file
+  ansible.builtin.template:
+    src: "{{ conf_template }}"
+    dest: "{{ prometheus_dir }}/conf.yml"
+    owner: root
+    group: root
+  become: yes
+  register: conf
+
+- name: Kill Prometheus container if needed
+  ansible.builtin.shell: docker rm --force prometheusContainer
+  ignore_errors: True
+
+- name: Run Prometheus container
+  ansible.builtin.shell: |
+    docker run -d --rm -p 9090:9090 --name prometheusContainer \
+    -v $(pwd)/conf.yml:/etc/prometheus/prometheus.yml  prom/prometheus:v2.37.1  \
+    --config.file=/etc/prometheus/prometheus.yml
+  args:
+    chdir: "{{ prometheus_dir }}"

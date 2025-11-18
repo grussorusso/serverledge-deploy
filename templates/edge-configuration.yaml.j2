@@ -1,10 +1,27 @@
 ---
-api.port: 1323
-etcd.address: "{{ groups['sedge_Cloud'][0] }}:2379"
-cloud.server.url: "http://{{ groups['sedge_Cloud'][0] }}:1323"
+api.port: {{ edge_api_port }}
+etcd.address: "{{ hostvars[groups['cloud'][0]]['ansible_facts']['default_ipv4']['address'] }}:2379"
 
-offloading: true
-scheduler.policy: edgecloud
+registry.area: "ROME"
+registry.remote.area: "cloud-ROME"
+
 container.pool.memory: 3072
-container.pool.cpus: 1
+container.pool.cpus: 4
+
+scheduler.policy: default
 scheduler.queue.capacity: 0
+
+workflow.offloading.policy: threshold
+workflow.offloading.policy.ilp.obj.cost: 100
+workflow.offloading.policy.region.cost:
+  ROME: 0.0
+  cloud-ROME: 2.0
+workflow.profiling.saveinput: true
+
+metrics.enabled: true
+metrics.retriever.interval: 60
+metrics.prometheus.host: "{{ hostvars[groups['edge'][-1]]['ansible_host'] }}"
+
+tracing.enabled: false
+
+

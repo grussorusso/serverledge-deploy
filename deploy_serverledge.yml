@@ -1,8 +1,8 @@
 ---
 - name: Install Docker
   hosts: 
-    - sedge_Edge
-    - sedge_Cloud
+    - edge
+    - cloud
 
   tasks:
     - name: "Install Docker using role"
@@ -41,7 +41,7 @@
       when: groupupdated
 
 - name: Install Etcd
-  hosts: sedge_Cloud[0]
+  hosts: cloud[0]
   roles:
     - role: etcd
       wipe_etcd: true
@@ -49,7 +49,7 @@
 
 
 - name: Install ServerlEdge at the Edge
-  hosts: sedge_Edge
+  hosts: edge
   vars:
     conf_template: edge-configuration.yaml.j2
 
@@ -57,29 +57,39 @@
     - serverledge
 
 - name: Install ServerlEdge in all Cloud nodes
-  hosts: sedge_Cloud
+  hosts: cloud
   vars:
     conf_template: cloud-configuration.yaml.j2
   tasks:
     - include_role: 
         name: serverledge
-      when: "{{ groups['sedge_Cloud'] | length | int }} < 2"
+      when: "{{ groups['cloud'] | length | int }} < 2"
 
 - name: Install ServerlEdge in all Cloud nodes but one
-  hosts: sedge_Cloud[1:]
+  hosts: cloud[1:]
   vars:
     conf_template: cloud-configuration.yaml.j2
   tasks:
     - include_role: 
         name: serverledge
-      when: "{{ groups['sedge_Cloud'] | length | int }} > 1"
+      when: "{{ groups['cloud'] | length | int }} > 1"
 
 - name: Install LB in the Cloud
-  hosts: sedge_Cloud[0]
+  hosts: cloud[0]
   vars: 
     conf_template: lb-configuration.yaml.j2
 
   tasks:
     - include_role: 
         name: serverledge_lb
-      when: "{{ groups['sedge_Cloud'] | length | int }} > 1"
+      when: "{{ groups['cloud'] | length | int }} > 1"
+
+- name: Install Prometheus in one of the Edge nodes
+  hosts: edge[-1]
+  vars: 
+    conf_template: prometheus-configuration.yaml.j2
+
+  tasks:
+    - include_role: 
+        name: prometheus
+      when: "{{ deploy_prometheus }}"

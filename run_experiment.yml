@@ -1,8 +1,8 @@
 ---
 - name: Restart Serverledge
   hosts: 
-    - sedge_Edge
-    - sedge_Cloud
+    - edge
+    - cloud
   tasks:
     - include_tasks:
         file: tasks/restart_serverledge.yml
@@ -73,14 +73,14 @@
     - ansible.builtin.shell: "./serverledge-cli delete -f {{ func_name }}"
       ignore_errors: True
       environment:
-        SERVERLEDGE_HOST: '{{ groups["sedge_Edge"][0] }}'
+        SERVERLEDGE_HOST: '{{ groups["edge"][0] }}'
 
           #- ansible.builtin.shell: "./serverledge-cli create -f myFunction --memory 128 --cpu 1.0 --src sieve.js --runtime nodejs17ng --handler sieve.js"
           #  environment:
-          #    SERVERLEDGE_HOST: '{{ groups["sedge_Edge"][0] }}'
+          #    SERVERLEDGE_HOST: '{{ groups["edge"][0] }}'
     - ansible.builtin.shell: "./serverledge-cli create -f {{ func_name }} --memory {{ func_mem }} --cpu {{ func_cpu }} --src {{ func_src }} --runtime {{ func_runtime }} --handler {{ func_handler }}"
       environment:
-        SERVERLEDGE_HOST: '{{ groups["sedge_Edge"][0] }}'
+        SERVERLEDGE_HOST: '{{ groups["edge"][0] }}'
 
     - name: Copy testplan
       ansible.builtin.copy:
@@ -100,7 +100,7 @@
       ignore_errors: True
 
     - name: Start 
-      ansible.builtin.shell: "{{ ansible_env.HOME }}/apache-jmeter-5.5/bin/jmeter -n -t ./testplan.jmx -l /tmp/jmeter_results -Jhost={{ groups['sedge_Edge'][0] }} -Jusers={{ users }}"
+      ansible.builtin.shell: "{{ ansible_env.HOME }}/apache-jmeter-5.5/bin/jmeter -n -t ./testplan.jmx -l /tmp/jmeter_results -Jhost={{ groups['edge'][0] }} -Jusers={{ users }}"
       async: 900
       poll: 20
       register: jmeter_out
@@ -130,8 +130,8 @@
 
 - name: Get monitoring data
   hosts: 
-    - sedge_Edge
-    - sedge_Cloud
+    - edge
+    - cloud
   vars:
     local_output_dir: "."
   tasks:

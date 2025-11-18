@@ -35,13 +35,13 @@
         group: root
       become: yes
       register: serverledge_service
+
     - name: Start systemd service
       ansible.builtin.systemd:
         name: serverledge
         state: restarted
         daemon_reload: yes
       become: yes
-      when: serverledge_service.changed or uploaded_binary.changed
 
     - name: Pull NodeJS image
       ansible.builtin.command: docker pull grussorusso/serverledge-nodejs17ng
