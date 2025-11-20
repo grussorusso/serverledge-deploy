@@ -1,6 +1,6 @@
 ---
 api.port: {{ cloud_api_port }}
-etcd.address: "{{ hostvars[groups['cloud'][0]]['ansible_facts']['default_ipv4']['address'] }}:2379"
+etcd.address: "{{ hostvars[groups['cloud'][0]]['private_ip'] }}:2379"
 registry.udp.port: 9888
 container.pool.memory: 4000
 

@@ -1,6 +1,6 @@
 ---
 api.port: {{ edge_api_port }}
-etcd.address: "{{ hostvars[groups['cloud'][0]]['ansible_facts']['default_ipv4']['address'] }}:2379"
+etcd.address: "{{ hostvars[groups['cloud'][0]]['private_ip'] }}:2379"
 
 registry.area: "ROME"
 registry.remote.area: "cloud-ROME"
@@ -20,7 +20,7 @@ workflow.profiling.saveinput: true
 
 metrics.enabled: true
 metrics.retriever.interval: 60
-metrics.prometheus.host: "{{ hostvars[groups['edge'][-1]]['ansible_host'] }}"
+metrics.prometheus.host: "{{ hostvars[groups['edge'][-1]]['private_ip'] }}"
 
 tracing.enabled: false
 

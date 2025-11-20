@@ -7,54 +7,45 @@
     - include_tasks:
         file: tasks/restart_serverledge.yml
 
-    - name: Install CPU monitoring script
-      ansible.builtin.copy:
-        src: monitorCPU.sh
-        dest: "{{ ansible_env.HOME }}"
-        mode: '0755'
+    - ansible.builtin.command: docker pull grussorusso/weatherfunc
 
-    - name: Install CPU monitoring service
-      ansible.builtin.template:
-        src: monitorCPU.service.j2
-        dest: /etc/systemd/system/monitorCPU.service
-        owner: root
-        group: root
-      become: yes
-      register: monitor_service
+    #- name: Install CPU monitoring script
+    #  ansible.builtin.copy:
+    #    src: monitorCPU.sh
+    #    dest: "{{ ansible_env.HOME }}"
+    #    mode: '0755'
 
-    - name: Reload systemd
-      ansible.builtin.systemd:
-        daemon_reload: yes
-      become: yes
-      when: monitor_service.changed
-
-    - name: Start systemd service
-      ansible.builtin.systemd:
-        name: monitorCPU
-        state: restarted
-      become: yes
+    #- name: Install CPU monitoring service
+    #  ansible.builtin.template:
+    #    src: monitorCPU.service.j2
+    #    dest: /etc/systemd/system/monitorCPU.service
+    #    owner: root
+    #    group: root
+    #  become: yes
+    #  register: monitor_service
+#
+#    - name: Reload systemd
+#      ansible.builtin.systemd:
+#        daemon_reload: yes
+#      become: yes
+#      when: monitor_service.changed
+#
+#    - name: Start systemd service
+#      ansible.builtin.systemd:
+#        name: monitorCPU
+#        state: restarted
+#      become: yes
 
 - name: Quick benchmark
   hosts: 
-    - sedge_Client
+    - client
   vars:
-    func_name: myFunction # must match with the testplan
-    func_mem: 128
-    func_cpu: 1.0
-    func_runtime: nodejs17ng
-    func_handler: sieve.js
-    func_src: sieve.js
-    testplan: jmeter/testplanClosed.jmx
-    users: 3
-    local_results_file: results.csv
-    local_responses_file: responses.tar.gz
+    locustfile: locust/locustfile.py
 
   tasks:
-    - name: Install JMeter
+    - name: Install Locust
       include_role:
-        role: jmeter
-      vars:
-        jmeter_home: "{{ ansible_env.HOME }}"
+        role: locust
 
     - name: Install serverledge-cli
       include_role:
@@ -63,86 +54,48 @@
         deploy_cli_only: true
 
     - ansible.builtin.copy:
-        src: files/sleep.py
-        dest: "{{ ansible_env.HOME }}/sleep.py"
+        src: files/hello.py
+        dest: "{{ ansible_env.HOME }}/hello.py"
 
-    - ansible.builtin.copy:
-        src: files/sieve.js
-        dest: "{{ ansible_env.HOME }}/sieve.js"
-
-    - ansible.builtin.shell: "./serverledge-cli delete -f {{ func_name }}"
-      ignore_errors: True
-      environment:
-        SERVERLEDGE_HOST: '{{ groups["edge"][0] }}'
-
-          #- ansible.builtin.shell: "./serverledge-cli create -f myFunction --memory 128 --cpu 1.0 --src sieve.js --runtime nodejs17ng --handler sieve.js"
-          #  environment:
-          #    SERVERLEDGE_HOST: '{{ groups["edge"][0] }}'
-    - ansible.builtin.shell: "./serverledge-cli create -f {{ func_name }} --memory {{ func_mem }} --cpu {{ func_cpu }} --src {{ func_src }} --runtime {{ func_runtime }} --handler {{ func_handler }}"
-      environment:
-        SERVERLEDGE_HOST: '{{ groups["edge"][0] }}'
-
-    - name: Copy testplan
+    - name: Copy locustfile
       ansible.builtin.copy:
-        src: "{{ testplan }}"
-        dest: ./testplan.jmx
+        src: "{{ locustfile }}"
+        dest: ./locustfile.py
 
     - name: Clean previous results
       ansible.builtin.shell: "rm /tmp/jmeter*"
       ignore_errors: True
 
-    - name: Clean previous responses
-      ansible.builtin.shell: "find . -name 'jmeterResponse_*' -delete"
-      ignore_errors: True
-
-    - name: Stop any running Jmeter instance
-      ansible.builtin.shell: "pgrep jmeter | xargs kill -TERM"
+    - name: Stop any running Locust instance
+      ansible.builtin.shell: "pgrep locust | xargs kill -TERM"
       ignore_errors: True
 
     - name: Start 
-      ansible.builtin.shell: "{{ ansible_env.HOME }}/apache-jmeter-5.5/bin/jmeter -n -t ./testplan.jmx -l /tmp/jmeter_results -Jhost={{ groups['edge'][0] }} -Jusers={{ users }}"
+      ansible.builtin.shell: "locust --headless --csv locustresult --json-file locustjson --run-time 30 -H http://{{ hostvars[groups['edge'][0]]['private_ip'] }}:1323"
       async: 900
       poll: 20
-      register: jmeter_out
+      register: locust_out
 
-    - name: Zip Response files
-      community.general.archive:
-        path:
-          - jmeterResponse_*
-        dest: /tmp/jmeter_responses.tar.gz
-        format: gz
-        remove: yes
+    #- name: Zip Response files
+    #  community.general.archive:
+    #    path:
+    #      - jmeterResponse_*
+    #    dest: /tmp/jmeter_responses.tar.gz
+    #    format: gz
+    #    remove: yes
 
-    - name: Copy results
-      ansible.builtin.fetch: 
-        src: /tmp/jmeter_results
-        dest: "{{ local_results_file }}"
-        flat: yes
+    #- name: Copy results
+    #  ansible.builtin.fetch: 
+    #    src: /tmp/jmeter_results
+    #    dest: "{{ local_results_file }}"
+    #    flat: yes
 
-    - name: Copy responses
-      ansible.builtin.fetch: 
-        src: /tmp/jmeter_responses.tar.gz
-        dest: "{{ local_responses_file }}"
-        flat: yes
+    #- name: Copy responses
+    #  ansible.builtin.fetch: 
+    #    src: /tmp/jmeter_responses.tar.gz
+    #    dest: "{{ local_responses_file }}"
+    #    flat: yes
 
     - debug:
-        var: jmeter_out.stdout_lines
+        var: locust_out.stdout_lines
 
-- name: Get monitoring data
-  hosts: 
-    - edge
-    - cloud
-  vars:
-    local_output_dir: "."
-  tasks:
-    - name: Stop systemd service
-      ansible.builtin.systemd:
-        name: monitorCPU
-        state: stopped
-      become: yes
-
-    - name: Copy monitoring data
-      ansible.builtin.fetch: 
-        src: "{{ ansible_env.HOME }}/cpuUsage.txt"
-        dest: "{{ local_output_dir }}/cpuUsage-{{ ansible_hostname }}.txt"
-        flat: yes

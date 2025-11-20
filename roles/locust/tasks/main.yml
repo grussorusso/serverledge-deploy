@@ -1,0 +1,6 @@
+---
+- name: Install software
+  ansible.builtin.apt:
+    name: 
+      - python3
+      - python3-locust
