@@ -8,6 +8,7 @@
         file: tasks/restart_serverledge.yml
 
     - ansible.builtin.command: docker pull grussorusso/weatherfunc
+    - ansible.builtin.command: docker pull grussorusso/geminifunc
 
     #- name: Install CPU monitoring script
     #  ansible.builtin.copy:
@@ -40,7 +41,8 @@
   hosts: 
     - client
   vars:
-    locustfile: locust/locustfile.py
+    local_results_dir: results
+    duration_sec: 30
 
   tasks:
     - name: Install Locust
@@ -53,17 +55,13 @@
       vars:
         deploy_cli_only: true
 
-    - ansible.builtin.copy:
-        src: files/hello.py
-        dest: "{{ ansible_env.HOME }}/hello.py"
-
-    - name: Copy locustfile
+    - name: Copy locust dir
       ansible.builtin.copy:
-        src: "{{ locustfile }}"
-        dest: ./locustfile.py
+        src: "locust/"
+        dest: "."
 
     - name: Clean previous results
-      ansible.builtin.shell: "rm /tmp/jmeter*"
+      ansible.builtin.shell: "rm locust-results*"
       ignore_errors: True
 
     - name: Stop any running Locust instance
@@ -71,30 +69,37 @@
       ignore_errors: True
 
     - name: Start 
-      ansible.builtin.shell: "locust --headless --csv locustresult --json-file locustjson --run-time 30 -H http://{{ hostvars[groups['edge'][0]]['private_ip'] }}:1323"
+      ansible.builtin.shell: "locust --headless --csv locust-results --json-file locust-results --run-time {{ duration_sec }} -H http://{{ hostvars[groups['edge'][0]]['private_ip'] }}:1323"
+      
       async: 900
       poll: 20
       register: locust_out
 
-    #- name: Zip Response files
-    #  community.general.archive:
-    #    path:
-    #      - jmeterResponse_*
-    #    dest: /tmp/jmeter_responses.tar.gz
-    #    format: gz
-    #    remove: yes
+    - name: Zip Response files
+      community.general.archive:
+        path:
+          - responses/*
+        dest: /tmp/responses.tar.gz
+        format: gz
+        remove: yes
+    - name: Copy responses
+      ansible.builtin.fetch: 
+        src: /tmp/responses.tar.gz
+        dest: "{{ local_results_dir }}/responses.tar.gz"
+        flat: yes
 
-    #- name: Copy results
-    #  ansible.builtin.fetch: 
-    #    src: /tmp/jmeter_results
-    #    dest: "{{ local_results_file }}"
-    #    flat: yes
+    - name: Copy results
+      ansible.builtin.fetch: 
+        src: "{{ item }}"
+        dest: "{{ local_results_dir }}/"
+        flat: yes
+      with_list:
+        - "locust-results.json"
+        - "locust-results_exceptions.csv"
+        - "locust-results_failures.csv"
+        - "locust-results_stats.csv"
+        - "locust-results_stats_history.csv"
 
-    #- name: Copy responses
-    #  ansible.builtin.fetch: 
-    #    src: /tmp/jmeter_responses.tar.gz
-    #    dest: "{{ local_responses_file }}"
-    #    flat: yes
 
     - debug:
         var: locust_out.stdout_lines
