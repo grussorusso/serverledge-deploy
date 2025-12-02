@@ -27,7 +27,6 @@ class WorkflowData:
         for f in input_files:
             with open(f, "r") as jsonf:
                 inputs.append(jsonf.read())
-        print(inputs) # TODO
         return inputs
 
     def create(self, serverledge_cli, serverledge_host, serverledge_port):
@@ -62,6 +61,23 @@ cmds.append("create -u -f adapter --memory 200 --runtime python310 --handler ada
 cmds.append("create -u -f gemini --memory 500 --runtime custom --custom_image grussorusso/geminifunc --input gemini_api_key:Text --input prompt:Text --output response:Text")
 
 WORKFLOW_DATA.append(WorkflowData("weatherApp", "src/weather/weather.json", cmds, ["input/weather1.json"]))
+
+#
+# SENTIMENT ANALYSIS APP
+#
+cmds = []
+
+cmds.append("create -u --function sa_retrieve --memory 256 --runtime custom --custom_image matnar/sa-retrieve --input data_url:Text --input local_dir:Text --input object_name:Text --output status:Text  --output local_download:Bool --output uploaded:Bool --output object_name:Text")
+
+
+cmds.append("create -u --function sa_extract --memory 256 --runtime custom --custom_image matnar/sa-extract --input tgz_input_object_name:Text --input subset:Float --input local_dataset_file:Text --input local_output_dir:Text --input output_train_object_name:Text --input output_test_object_name:Text --output status:Text --output train_object_name:Text --output test_object_name:Text")
+
+
+cmds.append("create -u --function sa_train --memory 1224 --runtime custom --custom_image matnar/sa-train --input subset:Float --input max_features:Int --input train_object_data:Text --input local_train_file:Text --input local_model_file:Text --input local_vectorizer_file:Text --input output_model_object:Text --input output_vectorizer_object:Text --output status:Text --output model_object_name:Text --output vectorizer_object_name:Text")
+
+cmds.append("create -u --function sa_evaluate --memory 512 --runtime custom --custom_image matnar/sa-evaluate --input test_object_data:Text --input local_test_file:Text --input subset:Float --input local_model_file:Text --input local_vectorizer_file:Text --input input_model_object:Text --input input_vectorizer_object:Text --output status:Text --output accuracy:Float")
+
+WORKFLOW_DATA.append(WorkflowData("sentimentAnalysis", "src/sentiment/workflow.json", cmds, ["input/sentiment1.json"]))
 
 class ResponseLogger:
     """Thread-safe response logger with periodic flushing"""
@@ -165,6 +181,13 @@ def on_locust_init(environment, **kwargs):
     for workflow in WORKFLOW_DATA:
         workflow.create("serverledge/serverledge-cli", serverledge_host, serverledge_port)
 
+@events.quitting.add_listener
+def _(environment, **kw):
+    if environment.stats.total.fail_ratio > 0.5:
+        logging.error("Test failed due to failure ratio > 50%")
+        environment.process_exit_code = 1
+    else:
+        environment.process_exit_code = 0
 
 class MyUser(HttpUser):
     #wait_time = between(0.1,0.2)
