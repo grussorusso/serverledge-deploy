@@ -63,7 +63,7 @@
   tasks:
     - include_role: 
         name: serverledge
-      when: "{{ groups['cloud'] | length | int }} < 2"
+      when: groups['cloud'] | length | int < 2
 
 - name: Install ServerlEdge in all Cloud nodes but one
   hosts: cloud[1:]
@@ -72,7 +72,7 @@
   tasks:
     - include_role: 
         name: serverledge
-      when: "{{ groups['cloud'] | length | int }} > 1"
+      when: groups['cloud'] | length | int > 1
 
 - name: Install LB in the Cloud
   hosts: cloud[0]
@@ -82,7 +82,7 @@
   tasks:
     - include_role: 
         name: serverledge_lb
-      when: "{{ groups['cloud'] | length | int }} > 1"
+      when: groups['cloud'] | length | int > 1
 
 - name: Install Prometheus in one of the Edge nodes
   hosts: edge[-1]
@@ -92,6 +92,47 @@
   tasks:
     - include_role: 
         name: prometheus
-      when: "{{ deploy_prometheus }}"
+      when: deploy_prometheus
+
+
+- name: Install ILP Solver in one of the Edge nodes
+  hosts: edge[0]
+
+  tasks:
+    - ansible.builtin.apt:
+        name: glpk-utils
+        state: present
+    - ansible.builtin.apt:
+        name: python3-pulp
+        state: present
+    - ansible.builtin.apt:
+        name: python3-numpy
+        state: present
+
+    - ansible.builtin.file:
+        path: "/root/solver"
+        state: directory
+        mode: '0755'
+
+    - ansible.posix.synchronize:
+        src: /home/gabriele/Dev/workflow-offloading/
+        dest: /root/solver/
+        rsync_opts:
+          - "--exclude=env"
+
+    - name: copy systemd unit file
+      become: yes 
+      copy:
+        src: "/root/solver/solver.service"
+        dest: "/etc/systemd/system/"
+        remote_src: True
+
+    - name: enable and start systemd service
+      become: yes 
+      systemd:
+        daemon_reload: yes
+        state: restarted
+        name: "solver.service"
+        enabled: yes
 
 

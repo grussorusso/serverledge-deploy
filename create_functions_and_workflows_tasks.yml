@@ -1,0 +1,24 @@
+---
+- name: Create functions for {{ workflow_item.name }}
+  shell: "{{ serverledge_cli }} -H {{ serverledge_host }} -P {{ serverledge_port }} {{ cmd }}"
+  loop: "{{ workflow_item.func_create_cmds }}"
+  loop_control:
+    loop_var: cmd
+  register: func_output
+  changed_when: func_output.rc == 0
+
+- name: Display function creation output for {{ workflow_item.name }}
+  debug:
+    msg: "{{ item.stdout }}"
+  loop: "{{ func_output.results }}"
+  when: item.stdout is defined and item.stdout != ""
+
+- name: Create workflow {{ workflow_item.name }}
+  shell: "{{ serverledge_cli }} -H {{ serverledge_host }} -P {{ serverledge_port }} create-workflow -s {{ workflow_item.json_file }} -f {{ workflow_item.name }}"
+  register: workflow_output
+  changed_when: workflow_output.rc == 0
+
+- name: Display workflow creation output for {{ workflow_item.name }}
+  debug:
+    msg: "{{ workflow_output.stdout }}"
+  when: workflow_output.stdout is defined and workflow_output.stdout != ""

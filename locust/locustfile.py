@@ -1,4 +1,5 @@
 from locust import HttpUser, between, task, constant, events, constant_throughput
+import logging
 import re
 import locust.stats
 import random

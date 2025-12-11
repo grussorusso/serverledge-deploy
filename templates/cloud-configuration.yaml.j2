@@ -4,6 +4,8 @@ etcd.address: "{{ hostvars[groups['cloud'][0]]['private_ip'] }}:2379"
 registry.udp.port: 9888
 container.pool.memory: 4000
 
+metrics.enabled: true
+metrics.retriever.interval: 600
 
 scheduler.queue.capacity: 0
 
