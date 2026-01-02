@@ -22,6 +22,13 @@
           - "create -u --function sa_extract --memory 256 --runtime custom --custom_image matnar/sa-extract --input tgz_input_object_name:Text --input subset:Float --input minio_endpoint:Text --input minio_access_key:Text --input minio_secret_key:Text --input local_dataset_file:Text --input local_output_dir:Text --input output_train_object_name:Text --input output_test_object_name:Text --output status:Text --output train_object_name:Text --output test_object_name:Text"
           - "create -u --function sa_train --memory 1224 --runtime custom --custom_image matnar/sa-train --input subset:Float --input max_features:Int --input train_object_data:Text --input local_train_file:Text --input minio_endpoint:Text --input minio_access_key:Text --input minio_secret_key:Text --input local_model_file:Text --input local_vectorizer_file:Text --input output_model_object:Text --input output_vectorizer_object:Text --output status:Text --output model_object_name:Text --output vectorizer_object_name:Text"
           - "create -u --function sa_evaluate --memory 512 --runtime custom --custom_image matnar/sa-evaluate --input test_object_data:Text --input local_test_file:Text --input subset:Float --input local_model_file:Text --input local_vectorizer_file:Text --input minio_endpoint:Text --input minio_access_key:Text --input minio_secret_key:Text --input input_model_object:Text --input input_vectorizer_object:Text --output status:Text --output accuracy:Float"
+      
+      - name: personDetection
+        json_file: "src/person-detection/workflow.json"
+        func_create_cmds:
+          - "create -u -f resize --memory 500 --runtime custom --custom_image grussorusso/resizefunc --input img:Text --output img:Text"
+          - "create -u -f yoloFunc --memory 900 --runtime custom --custom_image grussorusso/yolofunc --input img:Text --output Img:Text --output Detections:ArrayText --output Count:Int"
+          - "create -u -f cropFunc --memory 500 --runtime custom --custom_image grussorusso/cropfunc --input Img:Text --input Detections:ArrayText --input Count:Int --input minio_endpoint:Text --input minio_access_key:Text --input minio_secret_key:Text --output Objects:ArrayText"
 
   tasks:
     - name: Process each workflow

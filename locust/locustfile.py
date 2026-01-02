@@ -80,6 +80,16 @@ cmds.append("create -u --function sa_evaluate --memory 512 --runtime custom --cu
 
 WORKFLOW_DATA.append(WorkflowData("sentimentAnalysis", "src/sentiment/workflow.json", cmds, ["input/sentiment1.json"]))
 
+#
+# PERSON DETECTION APP
+#
+cmds = []
+cmds.append("create -u -f resize --memory 500 --runtime custom --custom_image grussorusso/resizefunc --input img:Text --output img:Text")
+cmds.append("create -u -f yoloFunc --memory 900 --runtime custom --custom_image grussorusso/yolofunc --input img:Text --output Img:Text --output Detections:ArrayText --output Count:Int")
+cmds.append("create -u -f cropFunc --memory 500 --runtime custom --custom_image grussorusso/cropfunc --input Img:Text --input Detections:ArrayText --input Count:Int --input minio_endpoint:Text --input minio_access_key:Text --input minio_secret_key:Text --output Objects:ArrayText")
+WORKFLOW_DATA.append(WorkflowData("personDetection", "src/person-detection/workflow.json", cmds, ["input/personDetection1.json"]))
+
+
 class ResponseLogger:
     """Thread-safe response logger with periodic flushing"""
     
