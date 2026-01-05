@@ -136,3 +136,12 @@
         enabled: yes
 
 
+- name: Install serverledge-cli on the client host
+  hosts: client
+
+  tasks:
+    - name: Install serverledge-cli
+      include_role:
+        role: serverledge
+      vars:
+        deploy_cli_only: true

@@ -1,0 +1,20 @@
+{
+    "StartAt": "Weather",
+    "States": {
+      "Weather": {
+        "Type": "Task",
+        "Resource": "weather",
+        "Next": "Adapter"
+      },
+      "Adapter": {
+        "Type": "Task",
+        "Resource": "adapter",
+        "Next": "Gemini"
+      },
+      "Gemini": {
+        "Type": "Task",
+        "Resource": "gemini",
+        "End": true
+      }
+    }
+  }

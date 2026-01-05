@@ -9,6 +9,9 @@
 
     - ansible.builtin.command: docker pull grussorusso/weatherfunc
     - ansible.builtin.command: docker pull grussorusso/geminifunc
+    - ansible.builtin.command: docker pull grussorusso/cropfunc
+    - ansible.builtin.command: docker pull grussorusso/resizefunc
+    - ansible.builtin.command: docker pull grussorusso/yolofunc
     - ansible.builtin.command: docker pull matnar/sa-retrieve
     - ansible.builtin.command: docker pull matnar/sa-extract
     - ansible.builtin.command: docker pull matnar/sa-train

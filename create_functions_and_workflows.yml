@@ -31,6 +31,11 @@
           - "create -u -f cropFunc --memory 500 --runtime custom --custom_image grussorusso/cropfunc --input Img:Text --input Detections:ArrayText --input Count:Int --input minio_endpoint:Text --input minio_access_key:Text --input minio_secret_key:Text --output Objects:ArrayText"
 
   tasks:
+    - name: Copy src dir
+      ansible.builtin.copy:
+        src: "locust/src"
+        dest: "."
+
     - name: Process each workflow
       include_tasks: create_functions_and_workflows_tasks.yml
       loop: "{{ workflows }}"
