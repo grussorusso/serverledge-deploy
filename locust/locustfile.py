@@ -33,9 +33,9 @@ class WorkflowData:
         self.__next_input = (self.__next_input + 1) % len(self.inputs)
         return f
 
-WORKFLOW_DATA.append(WorkflowData("weatherApp", ["input/weather1.json"]))
-WORKFLOW_DATA.append(WorkflowData("sentimentAnalysis", ["input/sentiment1.json"]))
-WORKFLOW_DATA.append(WorkflowData("personDetection", ["input/personDetection1.json"]))
+WORKFLOW_DATA.append(WorkflowData("weatherApp", [f"input/weather{i}.json" for i in [1,2,3]]))
+WORKFLOW_DATA.append(WorkflowData("sentimentAnalysis", [f"input/sentiment{i}.json" for i in [1,2,3]]))
+WORKFLOW_DATA.append(WorkflowData("personDetection", [f"input/personDetection1.json" for i in [1,2,3]]))
 
 
 class ResponseLogger:

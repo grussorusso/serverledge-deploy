@@ -11,7 +11,7 @@
     - ansible.builtin.command: docker pull grussorusso/geminifunc
     - ansible.builtin.command: docker pull grussorusso/resizefunc
     - ansible.builtin.command: docker pull grussorusso/cropfunc
-    - ansible.builtin.command: docker pull grussorusso/yolofunc
+    - ansible.builtin.command: docker pull grussorusso/yolofuncv5
     - ansible.builtin.command: docker pull matnar/sa-retrieve
     - ansible.builtin.command: docker pull matnar/sa-extract
     - ansible.builtin.command: docker pull matnar/sa-train
@@ -59,7 +59,7 @@
       ignore_errors: True
 
     - name: Start 
-      ansible.builtin.shell: "locust --headless --csv locust-results --json-file locust-results --run-time {{ duration_sec }} --stop-timeout 10s --users {{ num_users }} -H http://{{ hostvars[groups['edge'][0]]['private_ip'] }}:1323"
+      ansible.builtin.shell: "locust --headless --csv locust-results --json --run-time {{ duration_sec }} --stop-timeout 10s --users {{ num_users }} -H http://{{ hostvars[groups['edge'][0]]['private_ip'] }}:1323"
       
       async: 900
       poll: 20
@@ -84,7 +84,6 @@
         dest: "{{ local_results_dir }}/"
         flat: yes
       with_list:
-        - "locust-results.json"
         - "locust-results_exceptions.csv"
         - "locust-results_failures.csv"
         - "locust-results_stats.csv"

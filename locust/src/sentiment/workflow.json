@@ -19,12 +19,12 @@
       "Choices": [
         {
           "Variable": "$.max_features",
-          "NumericLessThan": 10000,
+          "NumericLessThan": 1000,
           "Next": "LATrainState"
         },
         {
           "Variable": "$.max_features",
-          "NumericGreaterThanEquals": 10000,
+          "NumericGreaterThanEquals": 1000,
           "Next": "HATrainState"
         }
       ],
