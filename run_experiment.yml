@@ -1,45 +1,21 @@
 ---
-#- name: Restart Serverledge
-#  hosts: 
-#    - edge
-#    - cloud
-#  tasks:
-#    - include_tasks:
-#        file: tasks/restart_serverledge.yml
-#
-#    - ansible.builtin.command: docker pull grussorusso/weatherfunc
-#    - ansible.builtin.command: docker pull grussorusso/geminifunc
-#    - ansible.builtin.command: docker pull matnar/sa-retrieve
-#    - ansible.builtin.command: docker pull matnar/sa-extract
-#    - ansible.builtin.command: docker pull matnar/sa-train
-#    - ansible.builtin.command: docker pull matnar/sa-evaluate
-#
-#    #- name: Install CPU monitoring script
-#    #  ansible.builtin.copy:
-#    #    src: monitorCPU.sh
-#    #    dest: "{{ ansible_env.HOME }}"
-#    #    mode: '0755'
-#
-#    #- name: Install CPU monitoring service
-#    #  ansible.builtin.template:
-#    #    src: monitorCPU.service.j2
-#    #    dest: /etc/systemd/system/monitorCPU.service
-#    #    owner: root
-#    #    group: root
-#    #  become: yes
-#    #  register: monitor_service
-##
-##    - name: Reload systemd
-##      ansible.builtin.systemd:
-##        daemon_reload: yes
-##      become: yes
-##      when: monitor_service.changed
-##
-##    - name: Start systemd service
-##      ansible.builtin.systemd:
-##        name: monitorCPU
-##        state: restarted
-##      become: yes
+- name: Restart Serverledge
+  hosts: 
+    - edge
+    - cloud
+  tasks:
+    - include_tasks:
+        file: tasks/restart_serverledge.yml
+
+    - ansible.builtin.command: docker pull grussorusso/weatherfunc
+    - ansible.builtin.command: docker pull grussorusso/geminifunc
+    - ansible.builtin.command: docker pull grussorusso/resizefunc
+    - ansible.builtin.command: docker pull grussorusso/cropfunc
+    - ansible.builtin.command: docker pull grussorusso/yolofunc
+    - ansible.builtin.command: docker pull matnar/sa-retrieve
+    - ansible.builtin.command: docker pull matnar/sa-extract
+    - ansible.builtin.command: docker pull matnar/sa-train
+    - ansible.builtin.command: docker pull matnar/sa-evaluate
 
 - name: Quick benchmark
   hosts: 

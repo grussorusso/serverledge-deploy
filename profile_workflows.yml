@@ -41,6 +41,11 @@
         src: "{{ src_dir }}/weather/weather.json"
         dest: "weather.json"
 
+    - name: Copy workflow JSON files
+      ansible.builtin.copy:
+        src: "{{ src_dir }}/person-detection/workflow.json"
+        dest: "personDetection.json"
+
     - name: Ensure destination directory exists
       file:
         path: "saved-inputs"
@@ -64,7 +69,7 @@
       ignore_errors: True
 
     - name: Start 
-      ansible.builtin.shell: "python3 profile_workflows.py -w sentiment.json -w weather.json -i saved-inputs {% for host in groups['edge'] %}-e http://{{ hostvars[host]['private_ip'] }}:1323 {% endfor %}"
+      ansible.builtin.shell: "python3 profile_workflows.py -w sentiment.json -w weather.json -w personDetection.json -i saved-inputs {% for host in groups['edge'] %}-e http://{{ hostvars[host]['private_ip'] }}:1323 {% endfor %}"
       async: 900
       poll: 20
       register: locust_out
