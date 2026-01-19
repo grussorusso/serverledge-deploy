@@ -2,7 +2,7 @@
 - name: Restart Serverledge
   hosts: 
     - edge
-    - cloud
+    - cloud[1:]
   tasks:
     - include_tasks:
         file: tasks/restart_serverledge.yml
@@ -11,7 +11,7 @@
     - ansible.builtin.command: docker pull grussorusso/geminifunc
     - ansible.builtin.command: docker pull grussorusso/cropfunc
     - ansible.builtin.command: docker pull grussorusso/resizefunc
-    - ansible.builtin.command: docker pull grussorusso/yolofuncv5
+    - ansible.builtin.command: docker pull grussorusso/mobilenetssd
     - ansible.builtin.command: docker pull matnar/sa-retrieve
     - ansible.builtin.command: docker pull matnar/sa-extract
     - ansible.builtin.command: docker pull matnar/sa-train
@@ -87,6 +87,7 @@
         src: "solver/saved.pickle"
         dest: "solver/savedOLD.pickle"
         remote_src: true
+      ignore_errors: True
 
     - name: Update profiling data
       ansible.builtin.copy:

@@ -27,7 +27,7 @@
         json_file: "src/person-detection/workflow.json"
         func_create_cmds:
           - "create -u -f resize --memory 500 --runtime custom --custom_image grussorusso/resizefunc --input img:Text --output img:Text"
-          - "create -u -f yoloFunc --memory 900 --runtime custom --custom_image grussorusso/yolofuncv5 --input img:Text --output Img:Text --output Detections:ArrayText --output Count:Int"
+          - "create -u -f mobilenetssd --memory 900 --runtime custom --custom_image grussorusso/mobilenetssd --input img:Text --output Img:Text --output Detections:ArrayText --output Count:Int"
           - "create -u -f cropFunc --memory 500 --runtime custom --custom_image grussorusso/cropfunc --input Img:Text --input Detections:ArrayText --input Count:Int --input minio_endpoint:Text --input minio_access_key:Text --input minio_secret_key:Text --output Objects:ArrayText"
 
   tasks:

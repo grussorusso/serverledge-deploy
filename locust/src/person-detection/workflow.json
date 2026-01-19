@@ -8,7 +8,7 @@
       },
       "Detection": {
         "Type": "Task",
-        "Resource": "yoloFunc",
+        "Resource": "mobilenetssd",
         "Next": "ChoiceState"
       },
       "ChoiceState": {
