@@ -4,6 +4,7 @@ etcd.address: "{{ hostvars[groups['cloud'][0]]['private_ip'] }}:2379"
 
 registry.area: "ROME"
 registry.remote.area: "cloud-ROME"
+registry.node.id: {{ inventory_hostname }}
 
 container.pool.memory: 3072
 container.pool.cpus: 4
@@ -12,6 +13,7 @@ scheduler.policy: default
 scheduler.queue.capacity: 0
 
 workflow.offloading.policy: ilp
+workflow.offloading.policy.ilp.placement.ttl: 0
 workflow.offloading.policy.optimizer.host: "{{ hostvars[groups['edge'][0]]['private_ip'] }}"
 workflow.offloading.policy.ilp.obj.cost: 100
 workflow.offloading.policy.region.cost:
@@ -20,7 +22,10 @@ workflow.offloading.policy.region.cost:
 
 metrics.enabled: true
 metrics.retriever.interval: 60
-metrics.prometheus.host: "{{ hostvars[groups['edge'][-1]]['private_ip'] }}"
+metrics.prometheus.host: "{{ hostvars[groups['cloud'][0]]['private_ip'] }}"
+metrics.prometheus.pushgateway.host: "{{ hostvars[groups['cloud'][0]]['private_ip'] }}"
+#metrics.dump.json.file: /tmp/metrics.json
+metrics.load.json.file: /tmp/profiled_metrics.json
 
 tracing.enabled: false
 

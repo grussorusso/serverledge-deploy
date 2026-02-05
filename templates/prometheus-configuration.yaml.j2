@@ -11,12 +11,13 @@ scrape_configs:
     # scheme defaults to 'http'.
 
     static_configs:
-      - targets:
-{% for host in groups['edge'] %}
-        - "{{ hostvars[host]['private_ip'] }}:{{ edge_api_port }}"
-{% endfor %}
-{% for host in groups['cloud'] %}
-        - "{{ hostvars[host]['private_ip'] }}:{{ cloud_api_port }}"
-{% endfor %}
+      - targets: ["{{ hostvars[groups['cloud'][0]]['private_ip'] }}:9091"]
+
+#{% for host in groups['edge'] %}
+#        - "{{ hostvars[host]['private_ip'] }}:{{ edge_api_port }}"
+#{% endfor %}
+#{% for host in groups['cloud'] %}
+#        - "{{ hostvars[host]['private_ip'] }}:{{ cloud_api_port }}"
+#{% endfor %}
 
 

@@ -151,6 +151,7 @@ class MyUser(HttpUser):
     def index(self):
         workflow = random.choice(WORKFLOW_DATA)
         input = workflow.get_next_input()
+        #input["CanDoOffloading"] = True # MUST DESERIALIZE input str
 
         self.client.post(f"/workflow/invoke/{workflow.name}", data=input, headers={'content-type': 'application/json'})
 

@@ -46,7 +46,7 @@ def profile_workflow (workflow_json, endpoints, payloads_directory, n=10):
                     print(f"Failed req to {fun}, endpoint={endpoint}, status={response.status_code}")
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-w','--workflows', nargs='+', help='JSON files', required=True)
+parser.add_argument('-w','--workflows', nargs='+', help='JSON files', required=True, default=[])
 parser.add_argument('-e','--endpoints', nargs='+', help='http://HOST:PORT', required=False, default=["http://127.0.0.1:1323"])
 parser.add_argument('-i','--input_directory', action="store", required=True, default='./saved-inputs')
 parser.add_argument('-n','--nrequests', action="store", type=int, required=False, default=10)
@@ -58,6 +58,8 @@ print(f"Searching for input JSON files in {cli_args.input_directory}")
 # JSON files are passed
 # Workflows are already registered in Serverledge
 workflows = cli_args.workflows
+
+print(workflows)
 
 for w in workflows:
     print(f"Profiling {w}")

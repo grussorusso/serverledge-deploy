@@ -84,14 +84,17 @@
         name: serverledge_lb
       when: groups['cloud'] | length | int > 1
 
-- name: Install Prometheus in one of the Edge nodes
-  hosts: edge[-1]
+- name: Install Prometheus and its PushGateway
+  hosts: cloud[0]
   vars: 
     conf_template: prometheus-configuration.yaml.j2
 
   tasks:
     - include_role: 
         name: prometheus
+      when: deploy_prometheus
+    - include_role: 
+        name: prometheus_pushgateway
       when: deploy_prometheus
 
 

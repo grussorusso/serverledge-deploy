@@ -69,7 +69,8 @@
       ignore_errors: True
 
     - name: Start 
-      ansible.builtin.shell: "python3 profile_workflows.py -w sentiment.json -w weather.json -w personDetection.json -i saved-inputs {% for host in groups['edge'] %}-e http://{{ hostvars[host]['private_ip'] }}:1323 {% endfor %}"
+      # NOTE: we only target cloud[0] == the load balancer
+      ansible.builtin.shell: "python3 profile_workflows.py -w sentiment.json weather.json personDetection.json -i saved-inputs -e {% for host in groups['edge'] %} http://{{ hostvars[host]['private_ip'] }}:1323 {% endfor %} http://{{ hostvars[groups['cloud'][0]]['private_ip'] }}:1325"
       async: 900
       poll: 20
       register: locust_out

@@ -17,6 +17,14 @@
     - ansible.builtin.command: docker pull matnar/sa-train
     - ansible.builtin.command: docker pull matnar/sa-evaluate
 
+- name: Restore profiled metrics
+  hosts:
+    - edge[0]
+  tasks:
+    - ansible.builtin.copy:
+        src: "profiled_metrics.json"
+        dest: "/tmp/"
+
 - name: Quick benchmark
   hosts: 
     - client
