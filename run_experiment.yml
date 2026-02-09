@@ -17,6 +17,16 @@
     - ansible.builtin.command: docker pull matnar/sa-train
     - ansible.builtin.command: docker pull matnar/sa-evaluate
 
+    - name: Kill all running Docker containers
+      ansible.builtin.shell: "docker ps | grep grussorusso | cut -d ' ' -f 1 | grep -v CONT | xargs docker kill"
+      become: yes
+      ignore_errors: True
+    - name: Kill all running Docker containers
+      ansible.builtin.shell: "docker ps | grep matnar | cut -d ' ' -f 1 | grep -v CONT | xargs docker kill"
+      become: yes
+      ignore_errors: True
+
+
 - name: Restore profiled metrics
   hosts:
     - edge[0]
@@ -51,15 +61,6 @@
 
     - name: Clean previous results
       ansible.builtin.shell: "rm locust-results*"
-      ignore_errors: True
-
-    - name: Kill all running Docker containers
-      ansible.builtin.shell: "docker ps | grep grussorusso | cut -d ' ' -f 1 | grep -v CONT | xargs docker kill"
-      become: yes
-      ignore_errors: True
-    - name: Kill all running Docker containers
-      ansible.builtin.shell: "docker ps | grep matnar | cut -d ' ' -f 1 | grep -v CONT | xargs docker kill"
-      become: yes
       ignore_errors: True
 
     - name: Stop any running Locust instance

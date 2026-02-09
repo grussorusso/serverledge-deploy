@@ -13,6 +13,7 @@ TimeoutStartSec=0
 
 ExecStart={{ etcd_dir }}/etcd-{{ etcd_version }}-linux-amd64/etcd --name s1 \
   --data-dir /tmp/etcd/s1 \
+  --max-request-bytes 3572864 \
   --listen-client-urls http://0.0.0.0:2379 \
   --advertise-client-urls http://0.0.0.0:2379 \
   --listen-peer-urls http://0.0.0.0:2380 \
