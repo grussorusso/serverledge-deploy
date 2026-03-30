@@ -1,0 +1,127 @@
+{
+  "RemoteColdStartProbability": {
+    "adapter": 0.1,
+    "cropFunc": 0.1,
+    "gemini": 0.1,
+    "mobilenetssd": 0.1,
+    "resize": 0.1,
+    "sa_evaluate": 0.1,
+    "sa_extract": 0.1,
+    "sa_retrieve": 0.1,
+    "sa_train": 0.1,
+    "weather": 0.1
+  },
+  "AvgRemoteExecutionTime": {
+    "adapter": 0.0017296476000000015,
+    "cropFunc": 0.27050205629999996,
+    "gemini": 2.6955449177,
+    "mobilenetssd": 0.059367968199999996,
+    "resize": 0.0630353434,
+    "sa_evaluate": 0.4628523525,
+    "sa_extract": 0.12110909179999998,
+    "sa_retrieve": 0.08259881179999998,
+    "sa_train": 0.18570995489999997,
+    "weather": 0.011059992599999988
+  },
+  "AvgEdgeExecutionTime": {
+    "(ROME)edge1": {
+      "adapter": 0.005449301,
+      "cropFunc": 0.05474000849999998,
+      "gemini": 2.7702529581,
+      "mobilenetssd": 0.14497871569999998,
+      "resize": 0.13632391559999998,
+      "sa_evaluate": 0.6807086881,
+      "sa_extract": 0.015305165699999998,
+      "sa_retrieve": 0.0152991224,
+      "sa_train": 0.015144493599999994,
+      "weather": 0.03921303020000002
+    },
+    "(ROME)edge2": {
+      "adapter": 0.0055360565999999995,
+      "cropFunc": 0.0501586545,
+      "gemini": 2.9960781697000005,
+      "mobilenetssd": 0.1329930758,
+      "resize": 0.13124762530000003,
+      "sa_evaluate": 0.670317499,
+      "sa_extract": 0.015371062699999999,
+      "sa_retrieve": 0.016282747000000028,
+      "sa_train": 0.01630099530000002,
+      "weather": 0.04002016810000002
+    },
+    "(ROME)edge3": {
+      "adapter": 0.0058535344000000015,
+      "cropFunc": 0.0527291988,
+      "gemini": 2.9423816359,
+      "mobilenetssd": 0.1398428614,
+      "resize": 0.1307332594,
+      "sa_evaluate": 0.5806738249000001,
+      "sa_extract": 0.01519870249999999,
+      "sa_retrieve": 0.015789082100000035,
+      "sa_train": 0.01592733220000003,
+      "weather": 0.03840358810000001
+    }
+  },
+  "AvgRemoteInitTime": {
+    "adapter": 2.809609291,
+    "cropFunc": 0.551796663,
+    "gemini": 0.914385359,
+    "mobilenetssd": 0.315443657,
+    "resize": 0.33716833999999996,
+    "sa_evaluate": 1.768546808,
+    "sa_extract": 1.719794185,
+    "sa_retrieve": 1.731294101,
+    "sa_train": 1.728241769,
+    "weather": 1.727435639
+  },
+  "AvgEdgeInitTime": {
+    "(ROME)edge1": {
+      "adapter": 1.2033120959999999,
+      "cropFunc": 2.504820453,
+      "gemini": 2.263871565,
+      "mobilenetssd": 1.029363348,
+      "resize": 1.003747165,
+      "sa_evaluate": 3.034003081,
+      "sa_extract": 1.972234085,
+      "sa_retrieve": 1.944952215,
+      "sa_train": 2.025870827,
+      "weather": 2.982999801
+    },
+    "(ROME)edge2": {
+      "adapter": 1.496576481,
+      "cropFunc": 1.467728951,
+      "gemini": 2.310451961,
+      "mobilenetssd": 1.250617193,
+      "resize": 0.835675346,
+      "sa_evaluate": 2.999842577,
+      "sa_extract": 2.091555771,
+      "sa_retrieve": 3.062468302,
+      "sa_train": 3.081961093,
+      "weather": 3.113817561
+    },
+    "(ROME)edge3": {
+      "adapter": 1.4935210319999999,
+      "cropFunc": 2.30147751,
+      "gemini": 2.229855094,
+      "mobilenetssd": 0.826158624,
+      "resize": 1.002366638,
+      "sa_evaluate": 2.9950367009999996,
+      "sa_extract": 2.070770695,
+      "sa_retrieve": 2.991782414,
+      "sa_train": 3.056317407,
+      "weather": 2.979797682
+    }
+  },
+  "AvgOutputSize": {
+    "adapter": 554.5,
+    "cropFunc": 64.5,
+    "gemini": 382.8,
+    "mobilenetssd": 88513,
+    "resize": 88483,
+    "sa_evaluate": 36.1,
+    "sa_extract": 106,
+    "sa_retrieve": 127,
+    "sa_train": 136,
+    "weather": 295
+  },
+  "BranchFrequency": {}
+}

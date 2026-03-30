@@ -41,52 +41,49 @@ WORKFLOW_DATA.append(WorkflowData("personDetection", [f"input/personDetection1.j
 class ResponseLogger:
     """Thread-safe response logger with periodic flushing"""
     
-    def __init__(self, output_dir='responses', flush_interval=10, batch_size=100):
+    def __init__(self, output_file):
         """
         Args:
             output_dir: Directory to store response files
-            flush_interval: Seconds between automatic flushes
-            batch_size: Number of responses to accumulate before flushing
         """
-        self.output_dir = output_dir
-        self.flush_interval = flush_interval
-        self.batch_size = batch_size
+        self.output_file = output_file
         self.responses_buffer = []
         self.lock = Lock()
-        self.file_counter = 0
-        self.flush_thread = None
         self.running = False
-        
-        # Create output directory
-        os.makedirs(self.output_dir, exist_ok=True)
     
     def start(self):
         """Start the periodic flush thread"""
         self.running = True
-        self.flush_thread = Thread(target=self._periodic_flush, daemon=True)
-        self.flush_thread.start()
     
     def stop(self):
         """Stop the flush thread and flush remaining data"""
         self.running = False
-        if self.flush_thread:
-            self.flush_thread.join(timeout=5)
         self.flush_to_file()
     
-    def _periodic_flush(self):
-        """Background thread that flushes data periodically"""
-        while self.running:
-            time.sleep(self.flush_interval)
-            self.flush_to_file()
-    
-    def add_response(self, response_data):
+    def add_response(self, url, response_time, status_code, jsonresp):
         """Add a response to the buffer (thread-safe)"""
         with self.lock:
-            self.responses_buffer.append(response_data)
-            
-            # Flush if batch size reached
-            if len(self.responses_buffer) >= self.batch_size:
-                self._flush_unlocked()
+            total_init = 0
+            total_duration = 0
+            func_area = []
+            func_node = []
+            func_warm = []
+            try:
+                reports = jsonresp["Reports"]
+                for func, freport in reports.items():
+                    func_area.append(f"{func}:{freport['ExecutionArea']}")
+                    func_node.append(f"{func}:{freport['ExecutionNode']}")
+                    func_warm.append(f"{func}:{freport['IsWarmStart']}")
+                    total_init += float(freport['InitTime'])
+                    total_duration += float(freport['Duration'])
+            except:
+                pass
+            areastr = "|".join(func_area)
+            nodestr = "|".join(func_node)
+            warmstr = "|".join(func_warm)
+
+            entry = f"{status_code}; {response_time}; {url}; {areastr}; {nodestr}; {warmstr}; {total_init}; {total_duration}"
+            self.responses_buffer.append(entry)
     
     def flush_to_file(self):
         """Flush buffer to file (thread-safe)"""
@@ -98,23 +95,12 @@ class ResponseLogger:
         if not self.responses_buffer:
             return
         
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename = os.path.join(
-            self.output_dir, 
-            f'responses_{timestamp}_{self.file_counter}.jsonl'
-        )
-        
         try:
-            # Write as JSON Lines format (one JSON object per line)
-            with open(filename, 'w') as f:
+            with open(self.output_file, 'w') as f:
                 for response in self.responses_buffer:
-                    f.write(json.dumps(response) + '\n')
+                    f.write(f"{response}\n")
             
-            print(f"Flushed {len(self.responses_buffer)} responses to {filename}")
-            
-            # Clear buffer and increment counter
-            self.responses_buffer.clear()
-            self.file_counter += 1
+            print(f"Flushed {len(self.responses_buffer)} responses to {self.output_file}")
             
         except Exception as e:
             print(f"Error flushing responses to file: {e}")
@@ -122,30 +108,31 @@ class ResponseLogger:
 
 # Create global logger instance
 response_logger = ResponseLogger(
-    output_dir='responses',
-    flush_interval=20,  # Flush every 10 seconds
-    batch_size=100      # Or when 100 responses accumulated
+    output_file='response_times.txt',
 )
 
-@events.init.add_listener
+@events.test_start.add_listener
 def on_locust_init(environment, **kwargs):
-    if response_logger is not None:
-        response_logger.start()
+    print("Starting test...")
+    response_logger.start()
 
     serverledge_host = environment.host.replace("http://","")
     serverledge_host, serverledge_port = serverledge_host.split(":")
 
-@events.quitting.add_listener
-def _(environment, **kw):
-    if environment.stats.total.fail_ratio > 0.5:
-        logging.error("Test failed due to failure ratio > 50%")
+@events.test_stop.add_listener
+def stop_handler(environment, **kw):
+    print("Stopping test...")
+    response_logger.stop()
+
+    if environment.stats.total.fail_ratio > 0.9:
+        logging.error("Test failed due to failure ratio > 90%")
         environment.process_exit_code = 1
     else:
         environment.process_exit_code = 0
 
 class MyUser(HttpUser):
     #wait_time = between(0.1,0.2)
-    #wait_time = constant_throughput(5)
+    wait_time = constant_throughput(1)
 
     @task
     def index(self):
@@ -153,16 +140,14 @@ class MyUser(HttpUser):
         input = workflow.get_next_input()
         #input["CanDoOffloading"] = True # MUST DESERIALIZE input str
 
-        self.client.post(f"/workflow/invoke/{workflow.name}", data=input, headers={'content-type': 'application/json'})
-
-    def on_stop(self):
-        global response_logger
-        if response_logger is not None:
-            response_logger.stop()
+        self.client.post(f"/workflow/invoke/{workflow.name}", data=input, headers={'content-type': 'application/json'}, timeout=60)
 
     @events.request.add_listener
     def my_request_handler(request_type, name, response_time, response_length, response,
             context, exception, start_time, url, **kwargs):
         global response_logger
-        if not exception:
-            response_logger.add_response(response.text)
+        try:
+            jsonresp = response.json()
+        except:
+            jsonresp = {}
+        response_logger.add_response(url, response_time, response.status_code, jsonresp)

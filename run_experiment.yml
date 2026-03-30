@@ -7,6 +7,19 @@
     - include_tasks:
         file: tasks/restart_serverledge.yml
 
+    - name: Kill all running Docker containers
+      ansible.builtin.shell: "docker ps | grep grussorusso | cut -d ' ' -f 1 | grep -v CONT | xargs docker kill"
+      become: yes
+      ignore_errors: True
+    - name: Kill all running Docker containers
+      ansible.builtin.shell: "docker ps | grep matnar | cut -d ' ' -f 1 | grep -v CONT | xargs docker kill"
+      become: yes
+      ignore_errors: True
+    - name: Prune Docker containers
+      ansible.builtin.shell: "docker container prune -f"
+      become: yes
+      ignore_errors: True
+
     - ansible.builtin.command: docker pull grussorusso/weatherfunc
     - ansible.builtin.command: docker pull grussorusso/geminifunc
     - ansible.builtin.command: docker pull grussorusso/resizefunc
@@ -17,14 +30,6 @@
     - ansible.builtin.command: docker pull matnar/sa-train
     - ansible.builtin.command: docker pull matnar/sa-evaluate
 
-    - name: Kill all running Docker containers
-      ansible.builtin.shell: "docker ps | grep grussorusso | cut -d ' ' -f 1 | grep -v CONT | xargs docker kill"
-      become: yes
-      ignore_errors: True
-    - name: Kill all running Docker containers
-      ansible.builtin.shell: "docker ps | grep matnar | cut -d ' ' -f 1 | grep -v CONT | xargs docker kill"
-      become: yes
-      ignore_errors: True
 
 
 - name: Restore profiled metrics
@@ -35,13 +40,27 @@
         src: "profiled_metrics.json"
         dest: "/tmp/"
 
+- name: Set variable for local result directory
+  hosts: localhost
+  gather_facts: true
+  vars:
+    local_results_dir: results
+  tasks:
+    - name: Add timestamp to directory name for results
+      set_fact:
+        local_results_dir_with_ts: "{{ local_results_dir }}-{{ ansible_date_time.iso8601_basic_short }}"
+
+
+
+
 - name: Quick benchmark
   hosts: 
     - client
   vars:
-    local_results_dir: results
-    duration_sec: 60
-    num_users: 2
+    local_results_dir: "{{ hostvars['localhost']['local_results_dir_with_ts'] }}"
+    duration_sec: 180
+    num_users: 5
+  gather_facts: True
 
   tasks:
     - name: Install Locust
@@ -68,25 +87,35 @@
       ignore_errors: True
 
     - name: Start 
-      ansible.builtin.shell: "locust --headless --csv locust-results --json --run-time {{ duration_sec }} --stop-timeout 10s --users {{ num_users }} -H http://{{ hostvars[groups['edge'][0]]['private_ip'] }}:1323"
+      ansible.builtin.shell: "locust --headless --skip-log --csv locust-results --json --run-time {{ duration_sec }} --stop-timeout 10s --users {{ num_users }} -H http://{{ hostvars[groups['edge'][0]]['private_ip'] }}:1323"
       
       async: 900
       poll: 20
       ignore_errors: True
       register: locust_out
 
-    - name: Zip Response files
-      community.general.archive:
-        path:
-          - responses/*
-        dest: /tmp/responses.tar.gz
-        format: gz
-        remove: yes
-    - name: Copy responses
-      ansible.builtin.fetch: 
-        src: /tmp/responses.tar.gz
-        dest: "{{ local_results_dir }}/responses.tar.gz"
-        flat: yes
+    - name: Save Locust output to file
+      copy:
+        content: "{{ locust_out.stdout }}"
+        dest: locust-results_stdout.json
+
+    - name: Save Locust stderr to file
+      copy:
+        content: "{{ locust_out.stderr }}"
+        dest: locust-results_stderr.json
+
+    #- name: Zip Response files
+    #  community.general.archive:
+    #    path:
+    #      - responses/*
+    #    dest: /tmp/responses.tar.gz
+    #    format: gz
+    #    remove: yes
+    #- name: Copy responses
+    #  ansible.builtin.fetch: 
+    #    src: /tmp/responses.tar.gz
+    #    dest: "{{ local_results_dir }}/responses.tar.gz"
+    #    flat: yes
 
     - name: Copy results
       ansible.builtin.fetch: 
@@ -98,8 +127,27 @@
         - "locust-results_failures.csv"
         - "locust-results_stats.csv"
         - "locust-results_stats_history.csv"
+        - "locust-results_stdout.json"
+        - "locust-results_stderr.json"
+        - "response_times.txt"
 
 
-    - debug:
-        var: locust_out.stdout_lines
+    - name: Show result
+      debug:
+        msg: "Results in {{ local_results_dir }}"
 
+- name: Backup configuration files
+  hosts: localhost
+  tasks:
+    - ansible.builtin.copy:
+        src: templates/edge-configuration.yaml.j2
+        dest: "{{ hostvars['localhost']['local_results_dir_with_ts'] }}/"
+    - ansible.builtin.copy:
+        src: templates/cloud-configuration.yaml.j2
+        dest: "{{ hostvars['localhost']['local_results_dir_with_ts'] }}/"
+    - ansible.builtin.copy:
+        src: locust/locustfile.py
+        dest: "{{ hostvars['localhost']['local_results_dir_with_ts'] }}/"
+    - ansible.builtin.copy:
+        src: run_experiment.yml
+        dest: "{{ hostvars['localhost']['local_results_dir_with_ts'] }}/"
