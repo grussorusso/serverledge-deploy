@@ -68,21 +68,31 @@ class ResponseLogger:
             func_area = []
             func_node = []
             func_warm = []
+            func_duration = []
             try:
                 reports = jsonresp["Reports"]
                 for func, freport in reports.items():
                     func_area.append(f"{func}:{freport['ExecutionArea']}")
                     func_node.append(f"{func}:{freport['ExecutionNode']}")
                     func_warm.append(f"{func}:{freport['IsWarmStart']}")
+                    duration = float(freport['Duration'])
+                    init_time = float(freport['InitTime'])-float(freport['QueueingTime'])
+                    func_duration.append(f"{func}:{duration+init_time}")
                     total_init += float(freport['InitTime'])
-                    total_duration += float(freport['Duration'])
+                    total_duration += duration
             except:
                 pass
             areastr = "|".join(func_area)
             nodestr = "|".join(func_node)
             warmstr = "|".join(func_warm)
+            durationstr = "|".join([str(x) for x in func_duration])
 
-            entry = f"{status_code}; {response_time}; {url}; {areastr}; {nodestr}; {warmstr}; {total_init}; {total_duration}"
+            try:
+                scheduling_time = float(jsonresp["SchedulingTime"])
+            except:
+                scheduling_time = -1
+
+            entry = f"{status_code}; {response_time}; {url}; {areastr}; {nodestr}; {warmstr}; {total_init}; {total_duration}; {durationstr}; {scheduling_time}"
             self.responses_buffer.append(entry)
     
     def flush_to_file(self):

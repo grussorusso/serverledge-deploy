@@ -12,11 +12,12 @@ container.pool.cpus: 4
 scheduler.policy: default
 scheduler.queue.capacity: 0
 
+workflow.always_save_progress: false
 workflow.offloading.policy: ilp
 workflow.offloading.policy.ilp.placement.ttl: 10 
 workflow.offloading.policy.optimizer.host: "{{ hostvars[groups['edge'][0]]['private_ip'] }}"
 
-workflow.offloading.policy.ilp.obj.cost: 10
+workflow.offloading.policy.ilp.obj.cost: 0.0
 workflow.offloading.policy.ilp.obj.data: 0
 workflow.offloading.policy.ilp.obj.violations: 1
 workflow.offloading.policy.ilp.obj.reclaimed: 0.1
@@ -29,9 +30,9 @@ metrics.enabled: true
 metrics.retriever.interval: 60
 metrics.prometheus.host: "{{ hostvars[groups['cloud'][0]]['private_ip'] }}"
 metrics.prometheus.pushgateway.host: "{{ hostvars[groups['cloud'][0]]['private_ip'] }}"
-#metrics.dump.json.file: /tmp/metrics.json
-metrics.load.json.file: /tmp/profiled_metrics.json
+metrics.dump.json.file: /tmp/metrics.json
+#metrics.load.json.file: /tmp/profiled_metrics.json
 
 tracing.enabled: false
 
-workflow.profiling.saveinput: true 
+workflow.profiling.saveinput: false

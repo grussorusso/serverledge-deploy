@@ -4,7 +4,23 @@
       "Weather": {
         "Type": "Task",
         "Resource": "weather",
-        "Next": "Adapter"
+        "Next": "ChoiceState"
+      },
+      "ChoiceState": {
+	      "Type": "Choice",
+	      "Choices": [
+		      {
+			      "Variable": "$.ai_report",
+			      "BooleanEquals": true,
+			      "Next": "Adapter"
+		      },
+		      {
+			      "Variable": "$.ai_report",
+			      "BooleanEquals": false,
+			      "Next": "Formatter"
+		      }
+	      ],
+	      "Default": "Formatter"
       },
       "Adapter": {
         "Type": "Task",
@@ -14,6 +30,11 @@
       "Gemini": {
         "Type": "Task",
         "Resource": "gemini",
+        "End": true
+      },
+      "Formatter": {
+        "Type": "Task",
+        "Resource": "formatter",
         "End": true
       }
     }

@@ -7,16 +7,6 @@
     - include_tasks:
         file: tasks/restart_serverledge.yml
 
-    - ansible.builtin.command: docker pull grussorusso/weatherfunc
-    - ansible.builtin.command: docker pull grussorusso/geminifunc
-    - ansible.builtin.command: docker pull grussorusso/cropfunc
-    - ansible.builtin.command: docker pull grussorusso/resizefunc
-    - ansible.builtin.command: docker pull grussorusso/mobilenetssd
-    - ansible.builtin.command: docker pull matnar/sa-retrieve
-    - ansible.builtin.command: docker pull matnar/sa-extract
-    - ansible.builtin.command: docker pull matnar/sa-train
-    - ansible.builtin.command: docker pull matnar/sa-evaluate
-
 - name: Quick benchmark
   hosts: 
     - client
@@ -51,13 +41,35 @@
         path: "saved-inputs"
         state: directory
         mode: '0755'
-
+       
     - name: Sync directory to remote server
       synchronize:
         src: "{{ inputs_dir }}/"
         dest: "./saved-inputs/"
         delete: yes
         recursive: yes
+        #
+        #
+    - name: Find JSON files across multiple directories
+      ansible.builtin.find:
+        paths:
+          - saved-inputs/sa_extract
+          - saved-inputs/sa_evaluate
+          - saved-inputs/sa_train
+          - saved-inputs/sa_retrieve
+        patterns:
+          - "*.json"
+        recurse: yes
+      register: json_files_to_modify
+
+    # XXX: necessary to update MinIO IP in the workflow input files
+    - name: Update minio_endpoint in all JSON files
+      ansible.builtin.replace:
+        path: "{{ item.path }}"
+        regexp: '"minio_endpoint"\s*:\s*"[^"]*"'
+        replace: '"minio_endpoint":"{{ hostvars[groups["cloud"][0]]["ansible_host"] }}:9000"'
+      loop: "{{ json_files_to_modify.files }}"
+
 
     - name: Kill all running Docker containers
       ansible.builtin.shell: "docker ps | grep grussorusso | cut -d ' ' -f 1 | grep -v CONT | xargs docker kill"
@@ -68,30 +80,23 @@
       become: yes
       ignore_errors: True
 
-    - name: Start 
+
       # NOTE: we only target cloud[0] == the load balancer
-      ansible.builtin.shell: "python3 profile_workflows.py -w sentiment.json weather.json personDetection.json -i saved-inputs -e {% for host in groups['edge'] %} http://{{ hostvars[host]['private_ip'] }}:1323 {% endfor %} http://{{ hostvars[groups['cloud'][0]]['private_ip'] }}:1325"
-      async: 900
-      poll: 20
-      register: locust_out
+#    - name: Start 
+#      ansible.builtin.shell: "#python3 profile_workflows.py -w sentiment.json weather.json personDetection.json -i saved-inputs -e {% for host in groups['edge'] %} http://{{ hostvars[host]['private_ip'] }}:1323 {% endfor %} http://{{ hostvars[groups['cloud'][0]]['private_ip'] }}:1325"
+#      async: 900
+#      poll: 20
+#      register: locust_out
 
-    - debug:
-        var: locust_out.stdout_lines
+    - name: Start workflow profiling
+      ansible.builtin.shell: >
+        python3 profile_workflows.py
+        -w {{ item }}
+        -i saved-inputs
+        -e {% for host in groups['edge'] %} http://{{ hostvars[host]['private_ip'] }}:1323 {% endfor %}
+        http://{{ hostvars[groups['cloud'][0]]['private_ip'] }}:1325
+      loop:
+        - sentiment.json
+        - weather.json
+        - personDetection.json
 
-- name: Update saved profiling data 
-  hosts: 
-    - edge[0]
-
-  tasks:
-    - name: Backup previous profiling data
-      ansible.builtin.copy:
-        src: "solver/saved.pickle"
-        dest: "solver/savedOLD.pickle"
-        remote_src: true
-      ignore_errors: True
-
-    - name: Update profiling data
-      ansible.builtin.copy:
-        src: "solver/savedNEW.pickle"
-        dest: "solver/saved.pickle"
-        remote_src: true

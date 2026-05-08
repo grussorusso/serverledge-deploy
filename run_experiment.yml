@@ -1,4 +1,16 @@
 ---
+- name: Update Edge Serverledge configuration
+  hosts: 
+    - edge
+  tasks:
+    - name: Update Edge Serverledge configuration before restart
+      ansible.builtin.template:
+        src: edge-configuration.yaml.j2
+        dest: "serverledge/conf.yml"
+        owner: root
+        group: root
+      become: yes
+
 - name: Restart Serverledge
   hosts: 
     - edge
@@ -19,16 +31,6 @@
       ansible.builtin.shell: "docker container prune -f"
       become: yes
       ignore_errors: True
-
-    - ansible.builtin.command: docker pull grussorusso/weatherfunc
-    - ansible.builtin.command: docker pull grussorusso/geminifunc
-    - ansible.builtin.command: docker pull grussorusso/resizefunc
-    - ansible.builtin.command: docker pull grussorusso/cropfunc
-    - ansible.builtin.command: docker pull grussorusso/mobilenetssd
-    - ansible.builtin.command: docker pull matnar/sa-retrieve
-    - ansible.builtin.command: docker pull matnar/sa-extract
-    - ansible.builtin.command: docker pull matnar/sa-train
-    - ansible.builtin.command: docker pull matnar/sa-evaluate
 
 
 
@@ -58,7 +60,7 @@
     - client
   vars:
     local_results_dir: "{{ hostvars['localhost']['local_results_dir_with_ts'] }}"
-    duration_sec: 180
+    duration_sec: 240
     num_users: 5
   gather_facts: True
 
@@ -67,16 +69,19 @@
       include_role:
         role: locust
 
-    - name: Install serverledge-cli
-      include_role:
-        role: serverledge
-      vars:
-        deploy_cli_only: true
-
     - name: Copy locust dir
       ansible.builtin.copy:
         src: "locust/"
         dest: "."
+
+    # XXX: necessary to update MinIO IP in the workflow input files
+    - name: Update minio_endpoint in all JSON files
+      ansible.builtin.replace:
+        path: "{{ item }}"
+        regexp: '("minio_endpoint":\s*")[^"]*(")'
+        replace: '\1{{ hostvars[groups["cloud"][0]]["ansible_host"] }}:9000\2'
+      with_fileglob:
+        - locust/input/sentiment*.json
 
     - name: Clean previous results
       ansible.builtin.shell: "rm locust-results*"
@@ -151,3 +156,42 @@
     - ansible.builtin.copy:
         src: run_experiment.yml
         dest: "{{ hostvars['localhost']['local_results_dir_with_ts'] }}/"
+
+- name: Backup Serverledge log
+  hosts: edge[0]
+  tasks:
+    - name: Get current invocation ID for serverledge
+      ansible.builtin.command:
+        cmd: systemctl show serverledge --property=InvocationID --value
+      register: invocation_id
+      changed_when: false
+
+    - name: Get logs for serverledge since last restart
+      ansible.builtin.command:
+        cmd: journalctl _SYSTEMD_INVOCATION_ID={{ invocation_id.stdout | trim }} --no-pager
+      register: unit_logs
+      changed_when: false
+
+    - name: Save logs to local file
+      ansible.builtin.copy:
+        content: "{{ unit_logs.stdout }}"
+        dest: "{{ hostvars['localhost']['local_results_dir_with_ts'] }}/serverledge.log"
+      delegate_to: localhost
+
+    - name: Get current invocation ID for solver
+      ansible.builtin.command:
+        cmd: systemctl show solver --property=InvocationID --value
+      register: invocation_id
+      changed_when: false
+
+    - name: Get logs for solver since last restart
+      ansible.builtin.command:
+        cmd: journalctl _SYSTEMD_INVOCATION_ID={{ invocation_id.stdout | trim }} --no-pager
+      register: unit_logs
+      changed_when: false
+
+    - name: Save logs to local file
+      ansible.builtin.copy:
+        content: "{{ unit_logs.stdout }}"
+        dest: "{{ hostvars['localhost']['local_results_dir_with_ts'] }}/solver.log"
+      delegate_to: localhost

@@ -48,6 +48,6 @@
       when: pull_nodejs
 
     - name: Pull Python image
-      ansible.builtin.command: docker pull grussorusso/serverledge-python310
+      ansible.builtin.command: docker pull grussorusso/serverledge-python314
       when: pull_python
   when: not deploy_cli_only

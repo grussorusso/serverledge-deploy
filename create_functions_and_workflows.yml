@@ -11,8 +11,9 @@
       - name: weatherApp
         json_file: "src/weather/weather.json"
         func_create_cmds:
-          - "create -u -f weather --memory 500 --runtime custom --custom_image grussorusso/weatherfunc --input gemini_api_key:Text --input latitude:Float --input longitude:Float --output gemini_api_key:Text --output current_temperature:Float --output daily_rain_sum:ArrayFloat --output daily_max_temp:ArrayFloat --output daily_min_temp:ArrayFloat"
-          - "create -u -f adapter --memory 200 --runtime python310 --handler adapter.handler --src /root/src/weather/adapter.py --input gemini_api_key:Text --input current_temperature:Float --input daily_rain_sum:ArrayFloat --input daily_max_temp:ArrayFloat --input daily_min_temp:ArrayFloat --output prompt:Text --output gemini_api_key:Text"
+          - "create -u -f weather --memory 500 --runtime custom --custom_image grussorusso/weatherfunc --input gemini_api_key:Text --input ai_report:Bool --input latitude:Float --input longitude:Float --output gemini_api_key:Text --output current_temperature:Float --output daily_rain_sum:ArrayFloat --output daily_max_temp:ArrayFloat --output daily_min_temp:ArrayFloat --output ai_report:Bool"
+          - "create -u -f formatter --memory 128 --runtime python314 --handler formatter.handler --src /root/src/weather/formatter.py --input current_temperature:Float --input daily_rain_sum:ArrayFloat --input daily_max_temp:ArrayFloat --input daily_min_temp:ArrayFloat --output response:Text" 
+          - "create -u -f adapter --memory 200 --runtime python314 --handler adapter.handler --src /root/src/weather/adapter.py --input gemini_api_key:Text --input current_temperature:Float --input daily_rain_sum:ArrayFloat --input daily_max_temp:ArrayFloat --input daily_min_temp:ArrayFloat --output prompt:Text --output gemini_api_key:Text"
           - "create -u -f gemini --memory 500 --runtime custom --custom_image grussorusso/geminifunc --input gemini_api_key:Text --input prompt:Text --output response:Text"
       
       - name: sentimentAnalysis
@@ -20,7 +21,7 @@
         func_create_cmds:
           - "create -u --function sa_retrieve --memory 256 --runtime custom --custom_image matnar/sa-retrieve --input minio_endpoint:Text --input minio_access_key:Text --input minio_secret_key:Text --input data_url:Text --input local_dir:Text --input object_name:Text --output status:Text --output local_download:Bool --output uploaded:Bool --output object_name:Text"
           - "create -u --function sa_extract --memory 256 --runtime custom --custom_image matnar/sa-extract --input tgz_input_object_name:Text --input subset:Float --input minio_endpoint:Text --input minio_access_key:Text --input minio_secret_key:Text --input local_dataset_file:Text --input local_output_dir:Text --input output_train_object_name:Text --input output_test_object_name:Text --output status:Text --output train_object_name:Text --output test_object_name:Text"
-          - "create -u --function sa_train --memory 1224 --runtime custom --custom_image matnar/sa-train --input subset:Float --input max_features:Int --input train_object_data:Text --input local_train_file:Text --input minio_endpoint:Text --input minio_access_key:Text --input minio_secret_key:Text --input local_model_file:Text --input local_vectorizer_file:Text --input output_model_object:Text --input output_vectorizer_object:Text --output status:Text --output model_object_name:Text --output vectorizer_object_name:Text"
+          - "create -u --function sa_train --memory 1224 --runtime custom --custom_image matnar/sa-train --input subset:Float --input max_features:Int --input train_object_data:Text --input local_train_file:Text --input minio_endpoint:Text --input minio_access_key:Text --input minio_secret_key:Text --input local_model_file:Text --input local_vectorizer_file:Text --input output_model_object:Text --input output_vectorizer_object:Text --input reuse_trained_model:Bool --output status:Text --output model_object_name:Text --output vectorizer_object_name:Text"
           - "create -u --function sa_evaluate --memory 512 --runtime custom --custom_image matnar/sa-evaluate --input test_object_data:Text --input local_test_file:Text --input subset:Float --input local_model_file:Text --input local_vectorizer_file:Text --input minio_endpoint:Text --input minio_access_key:Text --input minio_secret_key:Text --input input_model_object:Text --input input_vectorizer_object:Text --output status:Text --output accuracy:Float"
       
       - name: personDetection
@@ -28,7 +29,7 @@
         func_create_cmds:
           - "create -u -f resize --memory 500 --runtime custom --custom_image grussorusso/resizefunc --input img:Text --output img:Text"
           - "create -u -f mobilenetssd --memory 900 --runtime custom --custom_image grussorusso/mobilenetssd --input img:Text --output Img:Text --output Detections:ArrayText --output Count:Int"
-          - "create -u -f cropFunc --memory 500 --runtime custom --custom_image grussorusso/cropfunc --input Img:Text --input Detections:ArrayText --input Count:Int --input minio_endpoint:Text --input minio_access_key:Text --input minio_secret_key:Text --output Objects:ArrayText"
+          - "create -u -f cropFunc --memory 500 --runtime custom --custom_image grussorusso/cropfunc --input Img:Text --input Detections:ArrayText --input Count:Int --output Objects:ArrayText"
 
   tasks:
     - name: Copy src dir
@@ -41,3 +42,18 @@
       loop: "{{ workflows }}"
       loop_control:
         loop_var: workflow_item
+
+- name: Pull required images
+  hosts: 
+    - edge
+    - cloud[1:]
+  tasks:
+    - ansible.builtin.command: docker pull grussorusso/weatherfunc
+    - ansible.builtin.command: docker pull grussorusso/geminifunc
+    - ansible.builtin.command: docker pull grussorusso/resizefunc
+    - ansible.builtin.command: docker pull grussorusso/cropfunc
+    - ansible.builtin.command: docker pull grussorusso/mobilenetssd
+    - ansible.builtin.command: docker pull matnar/sa-retrieve
+    - ansible.builtin.command: docker pull matnar/sa-extract
+    - ansible.builtin.command: docker pull matnar/sa-train
+    - ansible.builtin.command: docker pull matnar/sa-evaluate
